@@ -1,0 +1,18 @@
+System prompt needs a rest button to go back to the orignainl promot and the content needs to retain during a browsers refresh. Might want to instute some kind of local storage model?
+
+Can we add hyper links in the tool tips to a much more detailed area of the web for more details on how something works?
+
+Can we add a tab with testing options that match the testing we are creating?
+Since most areas of the streamlit app are hyperlinked, we could make a very nice walkthrough for people
+
+What does Percise Mode mean? All perameters need to be explained in testing guide
+
+System promp text box needs to be taller by default
+
+Remove the (press enter to apply tips in the text boxes that do not need to be there)
+
+When I process a document there is a bunch of good information that shows up on the screen and then disappears. what is that info, should it stay? Is it placed somewhere else that I'm not seeing?
+
+Can you add the actual chunk_id to the results so we can take that id and look up the chunk in the Chunk ID Explorer
+
+Next to the model name place a description what is special and is expected from that model
