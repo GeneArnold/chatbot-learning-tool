@@ -45,25 +45,290 @@ def tooltip_selectbox(label, options, help_text, key=None, format_func=None):
     return st.selectbox(label, options, help=help_text, key=key, format_func=format_func)
 
 def tooltip_text_area(label, default_text, help_text, key=None):
-    """Create a text area with tooltip."""
-    return st.text_area(label, default_text, help=help_text, key=key)
+    """Text area with tooltip"""
+    st.markdown(tooltip(label, help_text), unsafe_allow_html=True)
+    return st.text_area("", default_text, key=key, label_visibility="collapsed")
+
+def display_cost_breakdown(cost_data, title="Cost Breakdown"):
+    """Display detailed cost breakdown with per-token pricing"""
+    if not cost_data:
+        return
+    
+    st.markdown(f"### 💰 {title}")
+    
+    # Summary metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        total_cost = cost_data.get('total_cost', 0)
+        st.metric("Total Cost", f"${total_cost:.6f}")
+    with col2:
+        input_tokens = cost_data.get('input_tokens', 0)
+        st.metric("Input Tokens", f"{input_tokens:,}")
+    with col3:
+        output_tokens = cost_data.get('output_tokens', 0)
+        st.metric("Output Tokens", f"{output_tokens:,}")
+    
+    # Detailed breakdown
+    with st.expander("💡 Detailed Cost Breakdown"):
+        model_name = cost_data.get('model', 'unknown')
+        
+        # Input costs
+        st.write("**📥 Input Costs:**")
+        input_cost_per_token = Config.get_cost_per_token(model_name, 'input')
+        input_cost = cost_data.get('input_cost', 0)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write(f"• **Rate:** ${input_cost_per_token:.8f} per token")
+            st.write(f"• **Tokens:** {input_tokens:,}")
+        with col2:
+            st.write(f"• **Cost:** ${input_cost:.6f}")
+        
+        # Output costs (if applicable)
+        if output_tokens > 0:
+            st.write("**📤 Output Costs:**")
+            output_cost_per_token = Config.get_cost_per_token(model_name, 'output')
+            output_cost = cost_data.get('output_cost', 0)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write(f"• **Rate:** ${output_cost_per_token:.8f} per token")
+                st.write(f"• **Tokens:** {output_tokens:,}")
+            with col2:
+                st.write(f"• **Cost:** ${output_cost:.6f}")
+
+def display_query_cost_breakdown(original_query, expanded_queries, output_tokens, model_name):
+    """Display immediate cost breakdown for the current query"""
+    with st.expander("💰 Cost Breakdown for This Query", expanded=False):
+        # Calculate costs
+        original_tokens = Config.count_tokens(original_query, model_name)
+        if len(expanded_queries) > 1:
+            expansion_text = " ".join(expanded_queries[1:])
+            expansion_tokens = Config.count_tokens(expansion_text, model_name)
+        else:
+            expansion_tokens = 0
+        
+        total_input_tokens = original_tokens + expansion_tokens
+        cost_data = Config.calculate_cost(model_name, total_input_tokens, output_tokens)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Input Cost", f"${cost_data['input_cost']:.6f}")
+        with col2:
+            st.metric("Output Cost", f"${cost_data['output_cost']:.6f}")
+        with col3:
+            st.metric("Total Cost", f"${cost_data['total_cost']:.6f}")
+
+def display_token_breakdown(original_query, expanded_queries, context_chunks, response_text, model_name):
+    """Display comprehensive token breakdown for educational purposes"""
+    with st.expander("🔍 Token Breakdown - See How Text Becomes Tokens & Costs", expanded=False):
+        st.markdown("### 🎓 Understanding Tokens & Costs")
+        st.info("💡 **What are tokens?** Tokens are pieces of text that AI models process. Words can be split into multiple tokens (e.g., 'tokenization' → 'token' + 'ization'). Each token costs money to process.")
+        
+        # 1. COMPLETE INPUT TOKENIZATION BREAKDOWN
+        st.markdown("### 1. 🔤 Input Tokenization Breakdown")
+        
+        # 1a. Original Query
+        st.markdown("#### a) Your Question")
+        query_breakdown = Config.tokenize_text(original_query, model_name)
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.write("**Original Text:**")
+            st.code(original_query, language=None)
+        with col2:
+            st.write(f"**Tokenized View ({query_breakdown['count']} tokens):**")
+            # Create a visual representation of tokens
+            token_display = ""
+            for i, token in enumerate(query_breakdown['tokens']):
+                # Escape special characters and add color coding
+                escaped_token = token.replace('\n', '\\n').replace('\t', '\\t')
+                if escaped_token.strip() == '':
+                    escaped_token = '[SPACE]'
+                token_display += f"`{escaped_token}` "
+            st.markdown(token_display)
+        
+        # Cost for original query
+        query_cost = Config.calculate_cost(model_name, query_breakdown['count'], 0)
+        st.write(f"**Cost:** {query_breakdown['count']} tokens × ${Config.get_cost_per_token(model_name, 'input'):.8f} = **${query_cost['input_cost']:.6f}**")
+        
+        # 1b. Query Expansion (always show section for clarity)
+        st.markdown("#### b) Query Expansion")
+        if len(expanded_queries) > 1:
+            expansion_text = " ".join(expanded_queries[1:])
+            expansion_breakdown = Config.tokenize_text(expansion_text, model_name)
+            
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                st.write("**Expanded Queries:**")
+                for i, exp_query in enumerate(expanded_queries[1:], 2):
+                    st.write(f"{i}. {exp_query}")
+            with col2:
+                st.write(f"**Additional Tokens ({expansion_breakdown['count']} tokens):**")
+                expansion_display = ""
+                for token in expansion_breakdown['tokens']:
+                    escaped_token = token.replace('\n', '\\n').replace('\t', '\\t')
+                    if escaped_token.strip() == '':
+                        escaped_token = '[SPACE]'
+                    expansion_display += f"`{escaped_token}` "
+                st.markdown(expansion_display)
+            
+            expansion_cost = Config.calculate_cost(model_name, expansion_breakdown['count'], 0)
+            st.write(f"**Additional Cost:** {expansion_breakdown['count']} tokens × ${Config.get_cost_per_token(model_name, 'input'):.8f} = **${expansion_cost['input_cost']:.6f}**")
+        else:
+            st.write("**Status:** No query expansion (expansion disabled or no RAG mode)")
+            expansion_breakdown = {'count': 0}
+            st.write("**Additional Tokens:** 0")
+            st.write("**Additional Cost:** $0.000000")
+        
+        # 1c. Total Input Summary
+        st.markdown("#### c) Total Input Cost")
+        total_input_tokens = query_breakdown['count'] + expansion_breakdown['count']
+        total_input_cost = Config.calculate_cost(model_name, total_input_tokens, 0)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Original Query", f"{query_breakdown['count']} tokens")
+        with col2:
+            st.metric("Query Expansion", f"+{expansion_breakdown['count']} tokens")
+        with col3:
+            st.metric("Total Input", f"{total_input_tokens} tokens")
+        
+        st.write(f"**📊 Input Math:** {query_breakdown['count']} + {expansion_breakdown['count']} = **{total_input_tokens} tokens** = **${total_input_cost['input_cost']:.6f}**")
+        
+        st.markdown("---")
+        
+        # 2. DOCUMENT CONTEXT BREAKDOWN
+        if context_chunks:
+            st.markdown("### 2. 📄 Document Context → Tokens Sent to AI")
+            st.write("*These are the relevant chunks from your documents that provide context to the AI:*")
+            
+            total_context_tokens = 0
+            for i, chunk in enumerate(context_chunks, 1):
+                chunk_breakdown = Config.tokenize_text(chunk, model_name)
+                total_context_tokens += chunk_breakdown['count']
+                
+                st.markdown(f"**Chunk {i}: {chunk_breakdown['count']} tokens**")
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    st.write("**Text:**")
+                    st.text_area("", chunk, height=100, disabled=True, key=f"chunk_{i}")
+                with col2:
+                    st.write("**Token Preview (first 20 tokens):**")
+                    preview_tokens = chunk_breakdown['tokens'][:20]
+                    preview_display = ""
+                    for token in preview_tokens:
+                        escaped_token = token.replace('\n', '\\n').replace('\t', '\\t')
+                        if escaped_token.strip() == '':
+                            escaped_token = '[SPACE]'
+                        preview_display += f"`{escaped_token}` "
+                    if len(chunk_breakdown['tokens']) > 20:
+                        preview_display += f"... +{len(chunk_breakdown['tokens']) - 20} more tokens"
+                    st.markdown(preview_display)
+                st.markdown("---")
+            
+            context_cost = Config.calculate_cost(model_name, total_context_tokens, 0)
+            st.write(f"**Context Cost:** {total_context_tokens} tokens × ${Config.get_cost_per_token(model_name, 'input'):.8f} = **${context_cost['input_cost']:.6f}**")
+            
+            st.markdown("---")
+        else:
+            total_context_tokens = 0
+        
+        # 3. AI RESPONSE BREAKDOWN
+        st.markdown("### 3. 🤖 AI Response → Output Tokens")
+        response_breakdown = Config.tokenize_text(response_text, model_name)
+        
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.write("**Response Text:**")
+            st.text_area("", response_text, height=150, disabled=True, key="response_display")
+        with col2:
+            st.write(f"**Token Preview ({response_breakdown['count']} tokens):**")
+            # Show first 30 tokens of response
+            preview_tokens = response_breakdown['tokens'][:30]
+            preview_display = ""
+            for token in preview_tokens:
+                escaped_token = token.replace('\n', '\\n').replace('\t', '\\t')
+                if escaped_token.strip() == '':
+                    escaped_token = '[SPACE]'
+                preview_display += f"`{escaped_token}` "
+            if len(response_breakdown['tokens']) > 30:
+                preview_display += f"... +{len(response_breakdown['tokens']) - 30} more tokens"
+            st.markdown(preview_display)
+        
+        response_cost = Config.calculate_cost(model_name, 0, response_breakdown['count'])
+        st.write(f"**Response Cost:** {response_breakdown['count']} tokens × ${Config.get_cost_per_token(model_name, 'output'):.8f} = **${response_cost['output_cost']:.6f}**")
+        
+        st.markdown("---")
+        
+        # 4. TOTAL BREAKDOWN
+        st.markdown("### 💰 Complete Cost Calculation")
+        query_tokens = query_breakdown['count']
+        expansion_tokens = expansion_breakdown['count']
+        context_tokens = total_context_tokens
+        output_tokens = response_breakdown['count']
+        
+        total_input_tokens = query_tokens + expansion_tokens + context_tokens
+        total_cost_data = Config.calculate_cost(model_name, total_input_tokens, output_tokens)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Input", f"{total_input_tokens:,} tokens", 
+                     help=f"Query: {query_tokens} + Expansion: {expansion_tokens} + Context: {context_tokens}")
+        with col2:
+            st.metric("Total Output", f"{output_tokens:,} tokens")
+        with col3:
+            st.metric("Grand Total Cost", f"${total_cost_data['total_cost']:.6f}")
+        
+        # Crystal clear final breakdown
+        st.markdown(f"""
+        **🧮 Final Cost Breakdown:**
+        - **Input Costs:**
+          - Your Question: {query_tokens} tokens = ${Config.calculate_cost(model_name, query_tokens, 0)['input_cost']:.6f}
+          - Query Expansion: {expansion_tokens} tokens = ${Config.calculate_cost(model_name, expansion_tokens, 0)['input_cost']:.6f}
+          - Document Context: {context_tokens} tokens = ${Config.calculate_cost(model_name, context_tokens, 0)['input_cost']:.6f}
+          - **Input Subtotal: {total_input_tokens} tokens = ${total_cost_data['input_cost']:.6f}**
+        
+        - **Output Costs:**
+          - AI Response: {output_tokens} tokens = ${Config.calculate_cost(model_name, 0, output_tokens)['output_cost']:.6f}
+        
+        **🎯 GRAND TOTAL: {total_input_tokens + output_tokens} tokens = ${total_cost_data['total_cost']:.6f}**
+        """)
+        
+        st.success("🔍 **Now you can see exactly where every token comes from!** Your question gets tokenized, sometimes expanded for better search, combined with relevant document chunks, and sent to the AI. The AI's response also gets tokenized for the output cost.")
 
 # =====================
 # CONFIGURATION KNOBS (now using Config class)
 # =====================
 # These are now loaded from config.py and can be overridden by environment variables
 
-# Model options (OpenAI only to avoid PyTorch issues)
+# =============================================================================
+# Model options - DEEPSEEK LLM + OPENAI EMBEDDINGS (hybrid approach)
+# =============================================================================
+
+# DeepSeek model options (PRIMARY for LLM)
 model_options = [
-    ("gpt-3.5-turbo", "GPT-3.5 Turbo"),
-    ("gpt-4", "GPT-4"),
-    ("gpt-4-turbo-preview", "GPT-4 Turbo")
+    ("deepseek-chat", "DeepSeek Chat"),
+    ("deepseek-coder", "DeepSeek Coder"),
+    ("deepseek-reasoner", "DeepSeek Reasoner")
 ]
 model_display_names = {
-    "gpt-3.5-turbo": "GPT-3.5 Turbo",
-    "gpt-4": "GPT-4", 
-    "gpt-4-turbo-preview": "GPT-4 Turbo"
+    "deepseek-chat": "DeepSeek Chat",
+    "deepseek-coder": "DeepSeek Coder",
+    "deepseek-reasoner": "DeepSeek Reasoner"
 }
+
+# OpenAI model options (PRESERVED FOR POTENTIAL RESTORATION)
+# model_options = [
+#     ("gpt-3.5-turbo", "GPT-3.5 Turbo"),
+#     ("gpt-4", "GPT-4"),
+#     ("gpt-4-turbo-preview", "GPT-4 Turbo")
+# ]
+# model_display_names = {
+#     "gpt-3.5-turbo": "GPT-3.5 Turbo",
+#     "gpt-4": "GPT-4", 
+#     "gpt-4-turbo-preview": "GPT-4 Turbo"
+# }
 
 # Functions from main.py (adapted for OpenAI embeddings)
 def get_files(sample_docs_dir=None):
@@ -119,10 +384,15 @@ def store_embeddings(collection, chunks, embeddings, metadatas=None):
         ids=unique_ids
     )
 
+# =============================================================================
+# HYBRID FUNCTIONS: OPENAI EMBEDDINGS + DEEPSEEK LLM
+# =============================================================================
+
 def embed_chunks_openai(chunks):
-    """Given a list of text chunks, return a list of embedding vectors using OpenAI."""
+    """Given a list of text chunks, return a list of embedding vectors using OpenAI.
+    NOTE: Using OpenAI for embeddings since DeepSeek doesn't provide embedding API."""
     if not Config.OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY environment variable not set.")
+        raise ValueError("OPENAI_API_KEY environment variable not set (required for embeddings).")
     
     client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
     
@@ -142,9 +412,10 @@ def embed_chunks_openai(chunks):
     return all_embeddings
 
 def embed_query_openai(query):
-    """Embed a single query using OpenAI."""
+    """Embed a single query using OpenAI.
+    NOTE: Using OpenAI for embeddings since DeepSeek doesn't provide embedding API."""
     if not Config.OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY environment variable not set.")
+        raise ValueError("OPENAI_API_KEY environment variable not set (required for embeddings).")
     
     client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
     response = client.embeddings.create(
@@ -153,7 +424,8 @@ def embed_query_openai(query):
     )
     return response.data[0].embedding
 
-def ask_openai(context_chunks, user_query, model=None, max_tokens=None, temperature=None, top_p=None, system_prompt=None, stop=None):
+def ask_deepseek(context_chunks, user_query, model=None, max_tokens=None, temperature=None, top_p=None, system_prompt=None, stop=None):
+    """Ask DeepSeek model with context chunks and user query. Returns (response, usage_info)"""
     # Use Config defaults if parameters not provided
     if model is None:
         model = Config.DEFAULT_LLM_MODEL
@@ -169,9 +441,13 @@ def ask_openai(context_chunks, user_query, model=None, max_tokens=None, temperat
     context = "\n".join(context_chunks)
     prompt = f"Context:\n{context}\n\nQuestion: {user_query}\nAnswer:"
     
-    if not Config.OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY environment variable not set.")
-    client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
+    if not Config.DEEPSEEK_API_KEY:
+        raise ValueError("DEEPSEEK_API_KEY environment variable not set.")
+    
+    client = openai.OpenAI(
+        api_key=Config.DEEPSEEK_API_KEY,
+        base_url="https://api.deepseek.com/v1"
+    )
     
     # Build the request parameters
     request_params = {
@@ -190,7 +466,101 @@ def ask_openai(context_chunks, user_query, model=None, max_tokens=None, temperat
         request_params["stop"] = stop
     
     response = client.chat.completions.create(**request_params)
-    return response.choices[0].message.content.strip()
+    
+    # Extract usage information
+    usage_info = {
+        'input_tokens': response.usage.prompt_tokens if response.usage else 0,
+        'output_tokens': response.usage.completion_tokens if response.usage else 0,
+        'total_tokens': response.usage.total_tokens if response.usage else 0
+    }
+    
+    return response.choices[0].message.content.strip(), usage_info
+
+# =============================================================================
+# OPENAI FUNCTIONS (PRESERVED FOR POTENTIAL RESTORATION)
+# =============================================================================
+
+# def embed_chunks_openai(chunks):
+#     """Given a list of text chunks, return a list of embedding vectors using OpenAI."""
+#     if not Config.OPENAI_API_KEY:
+#         raise ValueError("OPENAI_API_KEY environment variable not set.")
+#     
+#     client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
+#     
+#     # OpenAI has a limit on batch size, so we'll process in batches
+#     batch_size = 100
+#     all_embeddings = []
+#     
+#     for i in range(0, len(chunks), batch_size):
+#         batch = chunks[i:i + batch_size]
+#         response = client.embeddings.create(
+#             model=Config.EMBEDDING_MODEL,
+#             input=batch
+#         )
+#         batch_embeddings = [embedding.embedding for embedding in response.data]
+#         all_embeddings.extend(batch_embeddings)
+#     
+#     return all_embeddings
+
+# def embed_query_openai(query):
+#     """Embed a single query using OpenAI."""
+#     if not Config.OPENAI_API_KEY:
+#         raise ValueError("OPENAI_API_KEY environment variable not set.")
+#     
+#     client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
+#     response = client.embeddings.create(
+#         model=Config.EMBEDDING_MODEL,
+#         input=[query]
+#     )
+#     return response.data[0].embedding
+
+# def ask_openai(context_chunks, user_query, model=None, max_tokens=None, temperature=None, top_p=None, system_prompt=None, stop=None):
+#     # Use Config defaults if parameters not provided
+#     if model is None:
+#         model = Config.DEFAULT_LLM_MODEL
+#     if max_tokens is None:
+#         max_tokens = Config.LLM_MAX_TOKENS
+#     if temperature is None:
+#         temperature = Config.LLM_TEMPERATURE
+#     if top_p is None:
+#         top_p = Config.LLM_TOP_P
+#     if system_prompt is None:
+#         system_prompt = Config.SYSTEM_PROMPT
+#         
+#     context = "\n".join(context_chunks)
+#     prompt = f"Context:\n{context}\n\nQuestion: {user_query}\nAnswer:"
+#     
+#     if not Config.OPENAI_API_KEY:
+#         raise ValueError("OPENAI_API_KEY environment variable not set.")
+#     client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
+#     
+#     # Build the request parameters
+#     request_params = {
+#         "model": model,
+#         "messages": [
+#             {"role": "system", "content": system_prompt},
+#             {"role": "user", "content": prompt}
+#         ],
+#         "max_tokens": max_tokens,
+#         "temperature": temperature,
+#         "top_p": top_p,
+#     }
+#     
+#     # Only add stop parameter if it's not None
+#     if stop is not None:
+#         request_params["stop"] = stop
+#     
+#     response = client.chat.completions.create(**request_params)
+#     return response.choices[0].message.content.strip()
+
+# =============================================================================
+# ACTIVE FUNCTION ALIASES (Hybrid approach: OpenAI embeddings + DeepSeek LLM)
+# =============================================================================
+
+# Active function names that the rest of the app uses
+embed_chunks = embed_chunks_openai  # Using OpenAI for embeddings (DeepSeek doesn't offer embedding API)
+embed_query = embed_query_openai    # Using OpenAI for embeddings (DeepSeek doesn't offer embedding API)
+ask_llm = ask_deepseek             # Using DeepSeek for LLM
 
 def expand_query(query):
     """
@@ -268,17 +638,18 @@ def expand_query(query):
 def retrieve_with_query_expansion(collection, query, n_results=3):
     """
     Retrieve chunks using query expansion for better coverage.
-    Returns chunks, scores, and metadatas.
+    Returns chunks, scores, metadatas, and the actual expanded queries used.
     """
     expanded_queries = expand_query(query)
     all_chunks = []
     all_scores = []
     all_metadatas = []
     seen_chunks = set()
+    queries_used = []  # Track which queries actually returned results
     
     for exp_query in expanded_queries:
         try:
-            query_embedding = embed_query_openai(exp_query)
+            query_embedding = embed_query(exp_query)
             results = collection.query(
                 query_embeddings=[query_embedding],
                 n_results=n_results,
@@ -288,6 +659,10 @@ def retrieve_with_query_expansion(collection, query, n_results=3):
             chunks = results.get("documents", [[]])[0]
             scores = results.get("distances", [[]])[0]
             metadatas = results.get("metadatas", [[]])[0]
+            
+            # Only count this query as "used" if it returned results
+            if chunks:
+                queries_used.append(exp_query)
             
             # Add unique chunks
             for chunk, score, metadata in zip(chunks, scores, metadatas):
@@ -308,9 +683,10 @@ def retrieve_with_query_expansion(collection, query, n_results=3):
         top_results = combined[:n_results]
         return ([chunk for chunk, _, _ in top_results], 
                 [score for _, score, _ in top_results],
-                [metadata for _, _, metadata in top_results])
+                [metadata for _, _, metadata in top_results],
+                queries_used)  # Return the queries that were actually used
     
-    return [], [], []
+    return [], [], [], queries_used
 
 def delete_document_by_source(collection, source_filename):
     """Delete all chunks from a specific document source."""
@@ -345,6 +721,15 @@ if 'test_results' not in st.session_state:
     st.session_state.test_results = []
 if 'document_metadata' not in st.session_state:
     st.session_state.document_metadata = {}  # Track document info: {filename: {chunks: count, upload_time: datetime, etc.}}
+
+# Cost tracking session state
+if 'session_costs' not in st.session_state:
+    st.session_state.session_costs = {
+        'embedding_costs': [],  # For document processing: [{'tokens': int, 'cost': float, 'model': str, 'timestamp': str}]
+        'query_costs': [],      # For individual queries: [{'original_tokens': int, 'expansion_tokens': int, 'input_cost': float, 'output_tokens': int, 'output_cost': float, 'total_cost': float, 'model': str, 'timestamp': str}]
+        'total_embedding_cost': 0.0,
+        'total_query_cost': 0.0
+    }
 
 # Try to recover existing database on startup
 if not st.session_state.files_processed:
@@ -406,6 +791,54 @@ except FileNotFoundError:
     """, unsafe_allow_html=True)
 st.write("Compare AI responses with and without document context (RAG)")
 
+
+
+# Display manual in full-width container when requested
+if st.session_state.get('show_manual', False):
+    st.markdown("---")
+    
+    # Manual header with close button
+    col1, col2 = st.columns([6, 1])
+    with col1:
+        st.markdown("# 📖 RAG Chatbot Learning Tool - User Manual")
+    with col2:
+        if st.button("❌ Close"):
+            st.session_state.show_manual = False
+            st.rerun()
+    
+    # Display the manual content
+    try:
+        with open("user_manual.md", "r", encoding="utf-8") as f:
+            manual_content = f.read()
+        
+        # Remove the title from content since we already show it above
+        lines = manual_content.split('\n')
+        # Skip the first few lines that contain the title
+        content_start = 0
+        for i, line in enumerate(lines):
+            if line.startswith('---') and i > 0:
+                content_start = i + 1
+                break
+        
+        if content_start > 0:
+            manual_content = '\n'.join(lines[content_start:])
+        
+        st.markdown(manual_content)
+        
+        # Close button at bottom
+        st.markdown("---")
+        if st.button("❌ Close", key="close_manual_bottom"):
+            st.session_state.show_manual = False
+            st.rerun()
+            
+    except FileNotFoundError:
+        st.error("User manual not found. Please ensure user_manual.md exists in the project directory.")
+    except Exception as e:
+        st.error(f"Error loading user manual: {e}")
+    
+    # Stop here - don't show the rest of the interface when manual is open
+    st.stop()
+
 # Show database recovery notification
 if st.session_state.get('database_recovered', False):
     doc_count = len(st.session_state.document_metadata)
@@ -418,7 +851,7 @@ if st.session_state.get('database_recovered', False):
 
 
 # Status indicator
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns([2, 1.5, 1.5, 1.5])
 with col1:
     if st.session_state.files_processed:
         st.success("📄 RAG Enabled")
@@ -432,6 +865,103 @@ with col2:
 with col3:
     tooltip_metric("Tests Run", len(st.session_state.test_results), 
                   "Total number of questions asked and answers generated")
+
+with col4:
+    # User Manual button integrated into status row
+    st.write("")  # Add some spacing to align with metrics
+    if st.button("📖 Manual", help="Complete guide to using every feature of this RAG testing tool", use_container_width=True):
+        st.session_state.show_manual = True
+        st.rerun()
+
+# Cost tracking display (only if RAG is enabled and there are query costs)
+if st.session_state.files_processed and st.session_state.session_costs['total_query_cost'] > 0:
+    st.markdown("### 💰 Session Costs")
+    
+    # Cost overview
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(
+            "Query Costs", 
+            f"${st.session_state.session_costs['total_query_cost']:.6f}",
+            help="Cost for all questions asked this session (DeepSeek LLM)"
+        )
+    with col2:
+        queries_count = len(st.session_state.session_costs['query_costs'])
+        st.metric(
+            "Queries", 
+            f"{queries_count}",
+            help="Number of questions asked this session"
+        )
+    with col3:
+        avg_cost = st.session_state.session_costs['total_query_cost'] / max(1, queries_count)
+        st.metric(
+            "Avg Cost/Query", 
+            f"${avg_cost:.6f}",
+            help="Average cost per question"
+        )
+    with col4:
+        if st.button("💡 Cost Details", help="View detailed cost breakdown for this session"):
+            st.session_state.show_cost_details = not st.session_state.get('show_cost_details', False)
+    
+    # Detailed cost breakdown (if toggled)
+    if st.session_state.get('show_cost_details', False):
+        with st.expander("💰 Detailed Session Cost Breakdown", expanded=True):
+            # DeepSeek model pricing reference
+            st.write("**📊 Current Pricing:**")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("• **DeepSeek Models:** $0.14 per 1M input tokens")
+            with col2:
+                st.write("• **DeepSeek Models:** $0.28 per 1M output tokens")
+            
+            st.divider()
+            
+            # Query cost history
+            if st.session_state.session_costs['query_costs']:
+                st.write("**📈 Query Cost History:**")
+                for i, cost in enumerate(st.session_state.session_costs['query_costs'], 1):
+                    st.markdown(f"**Query {i} - ${cost['total_cost']:.6f}**")
+                    
+                    # Show original query
+                    st.write(f"**Original Query:** \"{cost.get('original_query', 'N/A')}\"")
+                    
+                    # Show expanded queries if any
+                    expanded_queries = cost.get('expanded_queries', [])
+                    if len(expanded_queries) > 1:
+                        st.write("**Query Expansion:**")
+                        for j, exp_query in enumerate(expanded_queries, 1):
+                            if j == 1:
+                                st.write(f"  {j}. {exp_query} *(original)*")
+                            else:
+                                st.write(f"  {j}. {exp_query}")
+                    else:
+                        st.write("**Query Expansion:** None (expansion disabled or no RAG)")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**Input:** {cost['original_tokens']:,} tokens")
+                        if cost.get('expansion_tokens', 0) > 0:
+                            st.write(f"**Expansion:** +{cost['expansion_tokens']:,} tokens")
+                            st.write(f"**Total Input:** {cost['original_tokens'] + cost['expansion_tokens']:,} tokens")
+                        st.write(f"**Input Cost:** ${cost['input_cost']:.6f}")
+                    with col2:
+                        st.write(f"**Output:** {cost['output_tokens']:,} tokens")
+                        st.write(f"**Output Cost:** ${cost['output_cost']:.6f}")
+                        st.write(f"**Model:** {cost['model']}")
+                        st.write(f"**Time:** {cost['timestamp']}")
+                    st.markdown("---")
+            
+            # Clear costs button
+            if st.button("🗑️ Clear Session Costs", help="Reset all cost tracking for this session"):
+                st.session_state.session_costs = {
+                    'embedding_costs': [],
+                    'query_costs': [],
+                    'total_embedding_cost': 0.0,
+                    'total_query_cost': 0.0
+                }
+                st.session_state.show_cost_details = False
+                st.success("Session costs cleared!")
+                st.rerun()
 
 # Create tabs
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["💬 Ask Questions", "📁 Documents", "⚙️ Parameters", "🔍 RAG Details", "📊 Test Results", "🧮 Vector Explorer"])
@@ -462,21 +992,21 @@ with tab1:
         
         # Update session state
         st.session_state.current_query = user_query
-        
-        # Clear button
-        if st.button("🗑️ Clear Query", help="Clear the question text area"):
-            st.session_state.current_query = ""
-            st.rerun()
             
     with col2:
         test_name = st.text_input("Test Name (optional)", 
                                 help="Give this test a name to easily identify it in the results history.")
+        
+        # Clear button - matches the width of the text input above
+        if st.button("🗑️ Clear Query", help="Clear the question text area", use_container_width=True):
+            st.session_state.current_query = ""
+            st.rerun()
     
     # Model selection with tooltip
     selected_model_idx = tooltip_selectbox(
-        "Select OpenAI Model",
+        "Select DeepSeek Model",
         range(len(model_options)),
-        "Choose which OpenAI model to use for generating answers. GPT-4 is more capable but slower and more expensive than GPT-3.5.",
+        "Choose which DeepSeek model to use for generating answers. DeepSeek Chat is optimized for general queries, DeepSeek Coder excels at code-related tasks, and DeepSeek Reasoner provides step-by-step reasoning.",
         format_func=lambda x: model_options[x][1]
     )
     selected_model = model_options[selected_model_idx][0]
@@ -508,17 +1038,20 @@ with tab1:
                         
                         if use_expansion:
                             # Use query expansion for better retrieval
-                            relevant_chunks, scores, metadatas = retrieve_with_query_expansion(
+                            relevant_chunks, scores, metadatas, queries_used = retrieve_with_query_expansion(
                                 st.session_state.collection, 
                                 user_query, 
                                 n_results
                             )
+                            # Use the actual queries that were used for retrieval
+                            expanded_queries = queries_used if queries_used else [user_query]
                         else:
                             relevant_chunks, scores, metadatas = [], [], []
+                            expanded_queries = [user_query]  # No expansion when disabled
                         
                         # Fallback to standard retrieval if expansion fails or is disabled  
                         if not relevant_chunks:
-                            query_embedding = embed_query_openai(user_query)
+                            query_embedding = embed_query(user_query)
                             results = st.session_state.collection.query(
                                 query_embeddings=[query_embedding],
                                 n_results=n_results,
@@ -527,12 +1060,13 @@ with tab1:
                             relevant_chunks = results.get("documents", [[]])[0]
                             scores = results.get("distances", [[]])[0]
                             metadatas = results.get("metadatas", [[]])[0]
+                            # When falling back, we only used the original query
+                            expanded_queries = [user_query]
                         
                         # Store retrieval results for RAG Details tab
-                        expanded_queries = expand_query(user_query) if use_expansion else [user_query]
                         st.session_state.last_retrieval = {
                             'query': user_query,
-                            'expanded_queries': expanded_queries,
+                            'expanded_queries': expanded_queries,  # Use the actual queries that were used
                             'chunks': relevant_chunks,
                             'scores': scores,
                             'metadatas': metadatas,
@@ -543,7 +1077,7 @@ with tab1:
                         model_name = model_display_names.get(selected_model, selected_model)
                         
                         try:
-                            llm_answer = ask_openai(
+                            llm_answer, usage_info = ask_llm(
                                 relevant_chunks, 
                                 user_query,
                                 model=selected_model,
@@ -554,6 +1088,39 @@ with tab1:
                                 stop=None
                             )
                             
+                            # Track costs for this query
+                            from datetime import datetime
+                            expanded_queries = st.session_state.last_retrieval.get('expanded_queries', [user_query])
+                            
+                            # Calculate original query vs expansion tokens
+                            original_tokens = Config.count_tokens(user_query, selected_model)
+                            if len(expanded_queries) > 1:
+                                expansion_text = " ".join(expanded_queries[1:])
+                                expansion_tokens = Config.count_tokens(expansion_text, selected_model)
+                            else:
+                                expansion_tokens = 0
+                            
+                            # Calculate costs
+                            total_input_tokens = original_tokens + expansion_tokens
+                            output_tokens = usage_info['output_tokens']
+                            cost_data = Config.calculate_cost(selected_model, total_input_tokens, output_tokens)
+                            
+                            # Store cost tracking
+                            cost_record = {
+                                'original_query': user_query,
+                                'expanded_queries': expanded_queries,
+                                'original_tokens': original_tokens,
+                                'expansion_tokens': expansion_tokens,
+                                'input_cost': cost_data['input_cost'],
+                                'output_tokens': output_tokens,
+                                'output_cost': cost_data['output_cost'],
+                                'total_cost': cost_data['total_cost'],
+                                'model': selected_model,
+                                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            }
+                            st.session_state.session_costs['query_costs'].append(cost_record)
+                            st.session_state.session_costs['total_query_cost'] += cost_data['total_cost']
+                            
                             # Display the answer
                             st.subheader("🤖 RAG-Enhanced Answer")
                             st.markdown(f"""
@@ -561,6 +1128,12 @@ with tab1:
                                 <div style="color: #155724; white-space: pre-wrap;">{llm_answer}</div>
                             </div>
                             """, unsafe_allow_html=True)
+                            
+                            # Display cost breakdown for this query
+                            display_query_cost_breakdown(user_query, expanded_queries, output_tokens, selected_model)
+                            
+                            # Display comprehensive token breakdown for education
+                            display_token_breakdown(user_query, expanded_queries, relevant_chunks, llm_answer, selected_model)
                             
                             # Quick context preview
                             st.write(f"**Context used:** {len(relevant_chunks)} chunks from your documents")
@@ -574,23 +1147,25 @@ with tab1:
                             context_used = relevant_chunks
                             
                         except Exception as e:
-                            st.error(f"OpenAI error: {e}")
-                            llm_answer = "Error: Could not get answer from OpenAI."
+                            st.error(f"DeepSeek error: {e}")
+                            llm_answer = "Error: Could not get answer from DeepSeek."
                             answer_type = "Error"
                             context_used = []
+                            usage_info = {'input_tokens': 0, 'output_tokens': 0, 'total_tokens': 0}
                             
                     except Exception as e:
                         st.error(f"Error processing query: {str(e)}")
                         llm_answer = None
                         answer_type = "Error"
                         context_used = []
+                        usage_info = {'input_tokens': 0, 'output_tokens': 0, 'total_tokens': 0}
             else:
                 st.info("💭 **No documents uploaded**: Answering based on AI's general knowledge only...")
                 
                 with st.spinner("Generating answer without document context..."):
                     try:
                         # Ask without context (non-RAG)
-                        llm_answer = ask_openai(
+                        llm_answer, usage_info = ask_llm(
                             [],  # No context chunks
                             user_query,
                             model=selected_model,
@@ -601,6 +1176,28 @@ with tab1:
                             stop=None
                         )
                         
+                        # Track costs for this query (no expansion in non-RAG mode)
+                        from datetime import datetime
+                        original_tokens = Config.count_tokens(user_query, selected_model)
+                        output_tokens = usage_info['output_tokens']
+                        cost_data = Config.calculate_cost(selected_model, original_tokens, output_tokens)
+                        
+                        # Store cost tracking
+                        cost_record = {
+                            'original_query': user_query,
+                            'expanded_queries': [user_query],  # No expansion in non-RAG mode
+                            'original_tokens': original_tokens,
+                            'expansion_tokens': 0,
+                            'input_cost': cost_data['input_cost'],
+                            'output_tokens': output_tokens,
+                            'output_cost': cost_data['output_cost'],
+                            'total_cost': cost_data['total_cost'],
+                            'model': selected_model,
+                            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        }
+                        st.session_state.session_costs['query_costs'].append(cost_record)
+                        st.session_state.session_costs['total_query_cost'] += cost_data['total_cost']
+                        
                         # Display the answer
                         st.subheader("🤖 General Knowledge Answer")
                         st.markdown(f"""
@@ -610,14 +1207,21 @@ with tab1:
                         """, unsafe_allow_html=True)
                         st.caption("💡 Upload documents to see how RAG can provide more specific, context-aware answers!")
                         
+                        # Display cost breakdown for this query
+                        display_query_cost_breakdown(user_query, [user_query], output_tokens, selected_model)
+                        
+                        # Display comprehensive token breakdown for education
+                        display_token_breakdown(user_query, [user_query], [], llm_answer, selected_model)
+                        
                         answer_type = "General"
                         context_used = []
                         
                     except Exception as e:
-                        st.error(f"OpenAI error: {e}")
-                        llm_answer = "Error: Could not get answer from OpenAI."
+                        st.error(f"DeepSeek error: {e}")
+                        llm_answer = "Error: Could not get answer from DeepSeek."
                         answer_type = "Error"
                         context_used = []
+                        usage_info = {'input_tokens': 0, 'output_tokens': 0, 'total_tokens': 0}
             
             # Save test result
             if llm_answer and not llm_answer.startswith("Error:"):
@@ -638,7 +1242,8 @@ with tab1:
                     },
                     'context_used': context_used,
                     'answer': llm_answer,
-                    'timestamp': datetime.now().isoformat()
+                    'timestamp': datetime.now().isoformat(),
+                    'usage_info': usage_info
                 }
                 st.session_state.test_results.append(test_result)
 
@@ -665,6 +1270,60 @@ with tab2:
             total_chars = sum(len(chunk) for chunk in st.session_state.all_chunks)
             tooltip_metric("Total Content", f"{total_chars:,} chars", 
                           "Total amount of text content available for retrieval")
+        
+        # Embedding costs display (one-time document processing costs)
+        if st.session_state.session_costs['total_embedding_cost'] > 0:
+            st.markdown("### 💰 Embedding Costs (Document Processing)")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric(
+                    "Total Cost", 
+                    f"${st.session_state.session_costs['total_embedding_cost']:.6f}",
+                    help="One-time cost for creating embeddings from your documents (OpenAI)"
+                )
+            with col2:
+                total_embedding_tokens = sum(cost['tokens'] for cost in st.session_state.session_costs['embedding_costs'])
+                st.metric(
+                    "Tokens Used", 
+                    f"{total_embedding_tokens:,}",
+                    help="Total tokens processed for embeddings"
+                )
+            with col3:
+                embeddings_count = len(st.session_state.session_costs['embedding_costs'])
+                st.metric(
+                    "Processing Sessions", 
+                    f"{embeddings_count}",
+                    help="Number of times documents were processed for embeddings"
+                )
+            with col4:
+                current_rate = Config.get_cost_per_token(Config.EMBEDDING_MODEL, 'input')
+                st.metric(
+                    "Rate per Token", 
+                    f"${current_rate:.8f}",
+                    help=f"Current {Config.EMBEDDING_MODEL} rate per token"
+                )
+            
+            # Detailed breakdown
+            with st.expander("💡 Detailed Embedding Cost Breakdown"):
+                st.write("**📊 Current Pricing:**")
+                st.write(f"• **{Config.EMBEDDING_MODEL}:** ${Config.get_cost_per_token(Config.EMBEDDING_MODEL, 'input'):.8f} per token")
+                
+                st.divider()
+                
+                if st.session_state.session_costs['embedding_costs']:
+                    st.write("**📈 Document Processing History:**")
+                    for i, cost in enumerate(st.session_state.session_costs['embedding_costs'], 1):
+                        st.markdown(f"**Processing {i} - ${cost['cost']:.6f} ({cost['files_processed']} files)**")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write(f"**Tokens:** {cost['tokens']:,}")
+                            st.write(f"**Cost:** ${cost['cost']:.6f}")
+                        with col2:
+                            st.write(f"**Model:** {cost['model']}")
+                            st.write(f"**Time:** {cost['timestamp']}")
+                            st.write(f"**Files:** {cost['files_processed']}")
+                        st.markdown("---")
         
         # Document Collection Overview
         st.subheader("📚 Document Collection")
@@ -741,6 +1400,90 @@ with tab2:
         else:
             st.info("📄 No document metadata available. This may be from an older database version.")
         
+        # Clear All Data functionality
+        st.divider()
+        st.subheader("🗑️ Database Management")
+        
+        # Enhanced warning section
+        st.warning("""
+        ⚠️ **DESTRUCTIVE ACTION WARNING**
+        
+        The "Clear All Data" button permanently deletes:
+        • All vector embeddings and similarity search data
+        • All uploaded document files (.txt, .md)
+        • All test results and question/answer history
+        • All document metadata and session data
+        
+        **This action CANNOT be undone!** 
+        
+        📖 See the User Manual (button above) for complete details on what gets deleted.
+        """)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🗑️ Clear All Data", type="secondary", 
+                        help="⚠️ PERMANENT DELETION: Remove all documents, chunks, embeddings, and test results. This cannot be undone!"):
+                st.session_state.show_clear_confirmation = True
+        
+        with col2:
+            if st.session_state.get('show_clear_confirmation', False):
+                st.error("⚠️ **FINAL WARNING: This will permanently delete ALL data!**")
+                st.write("📖 Check the User Manual above for complete details on what gets deleted.")
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if st.button("✅ Yes, Clear Everything", type="primary"):
+                        try:
+                            # Clear ChromaDB collection
+                            if st.session_state.collection:
+                                client = chromadb.PersistentClient(path=Config.CHROMA_DB_PATH)
+                                try:
+                                    client.delete_collection("simple_chunks")
+                                except:
+                                    pass  # Collection might not exist
+                            
+                            # Clear sample_docs directory
+                            sample_docs_dir = str(Config.SAMPLE_DOCS_DIR)
+                            if os.path.exists(sample_docs_dir):
+                                for f in os.listdir(sample_docs_dir):
+                                    if f.endswith(('.txt', '.md')):
+                                        os.remove(os.path.join(sample_docs_dir, f))
+                            
+                            # Reset all session state
+                            st.session_state.collection = None
+                            st.session_state.all_chunks = []
+                            st.session_state.files_processed = False
+                            st.session_state.document_metadata = {}
+                            st.session_state.test_results = []
+                            st.session_state.last_retrieval = None
+                            st.session_state.show_clear_confirmation = False
+                            st.session_state.file_uploader_key += 1
+                            
+                            # Clear cost tracking
+                            st.session_state.session_costs = {
+                                'embedding_costs': [],
+                                'query_costs': [],
+                                'total_embedding_cost': 0.0,
+                                'total_query_cost': 0.0
+                            }
+                            
+                            # Clear any display states
+                            if 'show_doc_chunks' in st.session_state:
+                                del st.session_state.show_doc_chunks
+                            if 'show_all_chunks' in st.session_state:
+                                del st.session_state.show_all_chunks
+                            if 'show_cost_details' in st.session_state:
+                                del st.session_state.show_cost_details
+                            
+                            st.success("✅ All data cleared successfully! The system has been reset.")
+                            st.rerun()
+                            
+                        except Exception as e:
+                            st.error(f"Error clearing data: {str(e)}")
+                
+                with col_b:
+                    if st.button("❌ Cancel"):
+                        st.session_state.show_clear_confirmation = False
+                        st.rerun()
 
         
         # Show document-specific chunks if requested
@@ -890,8 +1633,28 @@ with tab2:
                     if all_chunks:
                         # Create embeddings
                         with st.spinner("Creating embeddings with OpenAI..."):
-                            embeddings = embed_chunks_openai(all_chunks)
+                            embeddings = embed_chunks(all_chunks)
                             st.write(f"**Embeddings created:** {len(embeddings)} vectors of length {len(embeddings[0])}")
+                            
+                            # Track embedding costs
+                            from datetime import datetime
+                            total_text = " ".join(all_chunks)
+                            total_tokens = Config.count_tokens(total_text, Config.EMBEDDING_MODEL)
+                            embedding_cost_data = Config.calculate_cost(Config.EMBEDDING_MODEL, input_tokens=total_tokens, output_tokens=0)
+                            
+                            # Store embedding cost
+                            embedding_record = {
+                                'tokens': total_tokens,
+                                'cost': embedding_cost_data['total_cost'],
+                                'model': Config.EMBEDDING_MODEL,
+                                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'files_processed': len(files)
+                            }
+                            st.session_state.session_costs['embedding_costs'].append(embedding_record)
+                            st.session_state.session_costs['total_embedding_cost'] += embedding_cost_data['total_cost']
+                            
+                            # Display embedding cost information
+                            st.success(f"💰 **Embedding Cost:** ${embedding_cost_data['total_cost']:.6f} ({total_tokens:,} tokens @ ${Config.get_cost_per_token(Config.EMBEDDING_MODEL, 'input'):.8f} per token)")
                         
                         # Store in vector database
                         client = chromadb.PersistentClient(path=Config.CHROMA_DB_PATH)
@@ -963,10 +1726,15 @@ with tab3:
         )
         st.session_state.temperature = temperature
         
+        # Model-aware max tokens limit (DeepSeek supports up to 8192, OpenAI varies)
+        max_tokens_limit = 8192  # DeepSeek V3 limit
+        # If we were using OpenAI models, we'd need model-specific limits:
+        # max_tokens_limit = Config.MODEL_CONFIGS.get(selected_model, {}).get('max_tokens', 4096)
+        
         max_tokens = tooltip_slider(
-            "Max Tokens", 64, 2048, 
+            "Max Tokens", 64, max_tokens_limit, 
             st.session_state.get('max_tokens', Config.LLM_MAX_TOKENS), 64,
-            "Maximum length of the generated response. More tokens = longer responses",
+            f"Maximum length of the generated response. DeepSeek V3 supports up to {max_tokens_limit} tokens",
             key="tokens_slider"
         )
         st.session_state.max_tokens = max_tokens
@@ -981,11 +1749,16 @@ with tab3:
         st.session_state.top_p = top_p
     
     # System Prompt
-    system_prompt = tooltip_text_area(
+    st.markdown("**System Prompt** ℹ️")
+    st.caption("Instructions that control how the AI behaves. This prompt determines whether the AI uses only provided context or can use general knowledge.")
+    
+    system_prompt = st.text_area(
         "System Prompt", 
-        st.session_state.get('system_prompt', Config.SYSTEM_PROMPT),
-        "Instructions that control how the AI behaves. This prompt determines whether the AI uses only provided context or can use general knowledge.",
-        key="system_prompt_area"
+        value=st.session_state.get('system_prompt', Config.SYSTEM_PROMPT),
+        height=150,
+        help="Instructions that control how the AI behaves. This prompt determines whether the AI uses only provided context or can use general knowledge.",
+        key="system_prompt_area",
+        label_visibility="collapsed"
     )
     st.session_state.system_prompt = system_prompt
     
@@ -1033,25 +1806,25 @@ with tab3:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🎯 Precise Mode", help="Optimized for factual, deterministic answers"):
+        if st.button("🎯 Precise Mode", help="Optimized for factual, deterministic answers with DeepSeek"):
             st.session_state.temperature = 0.1
-            st.session_state.max_tokens = 256
+            st.session_state.max_tokens = 512  # Increased from 256 for DeepSeek's capabilities
             st.session_state.top_p = 0.9
             st.session_state.n_results = 3
             st.rerun()
     
     with col2:
-        if st.button("⚖️ Balanced Mode", help="Good balance of accuracy and creativity"):
+        if st.button("⚖️ Balanced Mode", help="Good balance of accuracy and creativity with DeepSeek"):
             st.session_state.temperature = 0.4
-            st.session_state.max_tokens = 512
+            st.session_state.max_tokens = 1024  # Increased from 512 for DeepSeek's capabilities
             st.session_state.top_p = 1.0
             st.session_state.n_results = 5
             st.rerun()
     
     with col3:
-        if st.button("🎨 Creative Mode", help="More creative and varied responses"):
+        if st.button("🎨 Creative Mode", help="More creative and varied responses with DeepSeek"):
             st.session_state.temperature = 0.8
-            st.session_state.max_tokens = 1024
+            st.session_state.max_tokens = 2048  # Increased from 1024 for DeepSeek's capabilities
             st.session_state.top_p = 1.0
             st.session_state.n_results = 7
             st.rerun()
@@ -1078,21 +1851,34 @@ with tab3:
 with tab4:
     st.header("🔍 RAG Retrieval Details")
     
-    if 'last_retrieval' in st.session_state:
+    if 'last_retrieval' in st.session_state and st.session_state.last_retrieval is not None:
         retrieval = st.session_state.last_retrieval
         
         st.subheader(f"Last Query: \"{retrieval['query']}\"")
         
-        # Show query expansion details if available
-        if 'expanded_queries' in retrieval and len(retrieval['expanded_queries']) > 1:
-            st.subheader("🔍 Query Expansion")
-            st.write("**Original query was expanded into these variations:**")
-            for i, exp_query in enumerate(retrieval['expanded_queries'], 1):
-                if i == 1:
-                    st.write(f"{i}. {exp_query} *(original)*")
-                else:
-                    st.write(f"{i}. {exp_query}")
-            st.divider()
+        # Show query expansion details - always show this section for clarity
+        st.subheader("🔍 Query Expansion Analysis")
+        if 'expanded_queries' in retrieval:
+            expanded_queries = retrieval['expanded_queries']
+            if len(expanded_queries) > 1:
+                st.success("✅ **Query expansion used** - Your query was expanded for better search coverage")
+                st.write("**Original query was expanded into these variations:**")
+                for i, exp_query in enumerate(expanded_queries, 1):
+                    if i == 1:
+                        st.write(f"{i}. {exp_query} *(original)*")
+                    else:
+                        st.write(f"{i}. {exp_query} *(expansion)*")
+                
+                # Show if expansion helped
+                unique_queries = len(set(expanded_queries))
+                if unique_queries < len(expanded_queries):
+                    st.info(f"💡 **Note:** Some expansions were duplicates. {unique_queries} unique queries were actually used.")
+            else:
+                st.warning("⚠️ **Query expansion attempted but no additional queries generated** - Only the original query was used")
+                st.write(f"**Query used:** {expanded_queries[0] if expanded_queries else 'Unknown'}")
+        else:
+            st.info("📝 **Query expansion disabled** - Only the original query was used for retrieval")
+        st.divider()
         
         # Document source analysis
         if retrieval.get('metadatas'):
@@ -1129,6 +1915,47 @@ with tab4:
         
         # Detailed chunk analysis
         st.subheader("📄 Retrieved Chunks Analysis")
+        
+        # Scoring reference table
+        st.write("**Quality Score Reference:**")
+        
+        # Create a simple table showing the scoring system
+        col1, col2, col3 = st.columns([1, 2, 4])
+        with col1:
+            st.write("**Rating**")
+        with col2:
+            st.write("**Score Range**")
+        with col3:
+            st.write("**Description**")
+        
+        st.divider()
+        
+        col1, col2, col3 = st.columns([1, 2, 4])
+        with col1:
+            st.write("🟢 Excellent")
+        with col2:
+            st.write("< 0.4")
+        with col3:
+            st.write("Highly relevant to your query")
+        
+        col1, col2, col3 = st.columns([1, 2, 4])
+        with col1:
+            st.write("🟡 Good")
+        with col2:
+            st.write("0.4 - 0.7")
+        with col3:
+            st.write("Contains relevant information")
+        
+        col1, col2, col3 = st.columns([1, 2, 4])
+        with col1:
+            st.write("🔴 Fair")
+        with col2:
+            st.write("> 0.7")
+        with col3:
+            st.write("Some relevance but may be noisy")
+        
+        st.write("*Note: Lower scores indicate better matches (measuring distance in vector space)*")
+        st.divider()
         
         # Get metadata for retrieved chunks if available
         chunk_metadatas = retrieval.get('metadatas', [])
@@ -1296,7 +2123,7 @@ with tab5:
         1. **Baseline Comparison**: Ask a question without documents, then upload relevant documents and ask the same question
         2. **Parameter Testing**: Try the same question with different temperature settings
         3. **Chunk Size Impact**: Upload documents, change chunk size in Parameters, reprocess, and compare answers
-        4. **Model Comparison**: Ask the same question using different OpenAI models
+        4. **Model Comparison**: Ask the same question using different DeepSeek models
         5. **Complex Queries**: Test with factual questions, analytical questions, and synthesis questions
         """)
 
@@ -1327,7 +2154,7 @@ with tab6:
                 if sample_result.get("embeddings") and len(sample_result["embeddings"]) > 0:
                     vector_dim = len(sample_result["embeddings"][0])
                 else:
-                    vector_dim = 1536  # OpenAI text-embedding-3-small default
+                    vector_dim = 1536  # DeepSeek embedding model default (updated from OpenAI)
             except:
                 vector_dim = 1536
             
@@ -1435,8 +2262,8 @@ with tab6:
                     
                     if st.button("🔍 Find Similar Chunks"):
                         try:
-                            # Use our OpenAI embedding function instead of query_texts
-                            query_embedding = embed_query_openai(chunk_content)
+                            # Use our DeepSeek embedding function instead of query_texts
+                            query_embedding = embed_query(chunk_content)
                             similar_results = st.session_state.collection.query(
                                 query_embeddings=[query_embedding],
                                 n_results=similarity_count + 1  # +1 because it will include itself
@@ -1556,7 +2383,7 @@ with tab6:
         st.write("""
         **The Vector Database Process:**
         
-        1. **Text → Vector**: Each chunk is converted to a {}-dimensional vector using OpenAI's embedding model
+        1. **Text → Vector**: Each chunk is converted to a {}-dimensional vector using OpenAI's embedding model (text-embedding-3-small)
         2. **Storage**: Vectors are stored with unique IDs (chunk_0, chunk_1, etc.) alongside the original text
         3. **Retrieval**: When you ask a question, your query becomes a vector and finds similar vectors
         4. **Similarity**: Lower distance scores mean higher similarity (0.0 = identical, 1.0+ = very different)

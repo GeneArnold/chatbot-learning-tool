@@ -11,8 +11,12 @@ services:
       # Optional: Override configuration
       - ./.env:/app/.env:ro
     environment:
-      # Required
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # =============================================================================
+      # HYBRID API Configuration - DeepSeek LLM + OpenAI Embeddings
+      # =============================================================================
+      # Required API Keys
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}  # For LLM
+      - OPENAI_API_KEY=${OPENAI_API_KEY}      # For embeddings (DeepSeek doesn't provide embedding API)
       
       # Optional overrides
       - ENVIRONMENT=${ENVIRONMENT:-development}
@@ -24,17 +28,25 @@ services:
       - SAMPLE_DOCS_DIR=/app/data/sample_docs
       - UPLOAD_DIR=/app/data/uploads
       
-      # Model configuration (optional)
+      # =============================================================================
+      # Model configuration - HYBRID: OPENAI EMBEDDINGS + DEEPSEEK LLM
+      # =============================================================================
+      # Embedding model (OpenAI - DeepSeek doesn't offer embedding API)
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
-      - DEFAULT_LLM_MODEL=${DEFAULT_LLM_MODEL:-gpt-3.5-turbo}
+      
+      # LLM model (DeepSeek)
+      - DEFAULT_LLM_MODEL=${DEFAULT_LLM_MODEL:-deepseek-chat}
       
       # RAG parameters (optional)
       - CHUNK_SIZE=${CHUNK_SIZE:-500}
       - CHUNK_OVERLAP=${CHUNK_OVERLAP:-100}
       - N_RESULTS=${N_RESULTS:-3}
       
-      # LLM parameters (optional)
-      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-256}
+      # =============================================================================
+      # LLM parameters - ADJUSTED FOR DEEPSEEK CAPABILITIES
+      # =============================================================================
+      # DeepSeek parameters (increased defaults for better capability)
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-512}  # Increased from 256
       - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.2}
       - LLM_TOP_P=${LLM_TOP_P:-1.0}
       
