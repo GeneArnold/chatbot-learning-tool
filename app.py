@@ -8,8 +8,22 @@ import json
 from datetime import datetime
 import numpy as np
 import pandas as pd
+from config import Config
 
 load_dotenv()
+
+# Initialize configuration and ensure directories exist
+Config.ensure_directories()
+
+# Validate configuration
+config_errors = Config.validate_config()
+if config_errors:
+    for error in config_errors:
+        st.error(f"⚠️ Configuration Error: {error}")
+
+# Show Docker info if in Docker environment
+if Config.IS_DOCKER:
+    st.info(f"🐳 Running in Docker mode - Data directory: {Config.DATA_DIR}")
 
 # =====================
 # TOOLTIP SYSTEM
@@ -35,23 +49,9 @@ def tooltip_text_area(label, default_text, help_text, key=None):
     return st.text_area(label, default_text, help=help_text, key=key)
 
 # =====================
-# CONFIGURATION KNOBS (from main.py)
+# CONFIGURATION KNOBS (now using Config class)
 # =====================
-# --- ChromaDB (Retriever) ---
-CHROMA_N_RESULTS = 3  # Number of chunks to retrieve per query
-CHUNK_SIZE = 500      # Number of characters per chunk
-CHUNK_OVERLAP = 100   # Overlap between chunks
-
-# --- LLM (Generator) ---
-LLM_MAX_TOKENS = 256
-LLM_TEMPERATURE = 0.2
-LLM_TOP_P = 1.0  # Only used by OpenAI, not llama.cpp
-LLM_STOP = None  # No stop sequence - allow multi-line responses
-LLM_SYSTEM_PROMPT = "You are a helpful assistant that can ONLY answer questions using the provided context. You must NOT use any external knowledge or training data. If no context is provided or the answer is not in the provided context, you MUST respond with exactly: 'I don't have enough information to answer this question based on the provided context.'"
-LLM_MODEL = "gpt-3.5-turbo"  # OpenAI model name
-
-# Embedding model
-EMBEDDING_MODEL = "text-embedding-3-small"  # OpenAI embedding model
+# These are now loaded from config.py and can be overridden by environment variables
 
 # Model options (OpenAI only to avoid PyTorch issues)
 model_options = [
@@ -66,8 +66,11 @@ model_display_names = {
 }
 
 # Functions from main.py (adapted for OpenAI embeddings)
-def get_files(sample_docs_dir):
+def get_files(sample_docs_dir=None):
     """Return list of .txt and .md files in sample_docs directory."""
+    if sample_docs_dir is None:
+        sample_docs_dir = Config.SAMPLE_DOCS_DIR
+    
     if not os.path.exists(sample_docs_dir):
         return []
     return [
@@ -84,8 +87,13 @@ def read_text_file(filepath):
         st.error(f"Error reading {filepath}: {e}")
         return None
 
-def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
+def chunk_text(text, chunk_size=None, overlap=None):
     """Split text into overlapping chunks."""
+    if chunk_size is None:
+        chunk_size = Config.CHUNK_SIZE
+    if overlap is None:
+        overlap = Config.CHUNK_OVERLAP
+        
     chunks = []
     start = 0
     while start < len(text):
@@ -113,11 +121,10 @@ def store_embeddings(collection, chunks, embeddings, metadatas=None):
 
 def embed_chunks_openai(chunks):
     """Given a list of text chunks, return a list of embedding vectors using OpenAI."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+    if not Config.OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY environment variable not set.")
     
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
     
     # OpenAI has a limit on batch size, so we'll process in batches
     batch_size = 100
@@ -126,7 +133,7 @@ def embed_chunks_openai(chunks):
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i:i + batch_size]
         response = client.embeddings.create(
-            model=EMBEDDING_MODEL,
+            model=Config.EMBEDDING_MODEL,
             input=batch
         )
         batch_embeddings = [embedding.embedding for embedding in response.data]
@@ -136,24 +143,35 @@ def embed_chunks_openai(chunks):
 
 def embed_query_openai(query):
     """Embed a single query using OpenAI."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+    if not Config.OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY environment variable not set.")
     
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
     response = client.embeddings.create(
-        model=EMBEDDING_MODEL,
+        model=Config.EMBEDDING_MODEL,
         input=[query]
     )
     return response.data[0].embedding
 
-def ask_openai(context_chunks, user_query, model=LLM_MODEL, max_tokens=LLM_MAX_TOKENS, temperature=LLM_TEMPERATURE, top_p=LLM_TOP_P, system_prompt=LLM_SYSTEM_PROMPT, stop=LLM_STOP):
+def ask_openai(context_chunks, user_query, model=None, max_tokens=None, temperature=None, top_p=None, system_prompt=None, stop=None):
+    # Use Config defaults if parameters not provided
+    if model is None:
+        model = Config.DEFAULT_LLM_MODEL
+    if max_tokens is None:
+        max_tokens = Config.LLM_MAX_TOKENS
+    if temperature is None:
+        temperature = Config.LLM_TEMPERATURE
+    if top_p is None:
+        top_p = Config.LLM_TOP_P
+    if system_prompt is None:
+        system_prompt = Config.SYSTEM_PROMPT
+        
     context = "\n".join(context_chunks)
     prompt = f"Context:\n{context}\n\nQuestion: {user_query}\nAnswer:"
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+    
+    if not Config.OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY environment variable not set.")
-    client = openai.OpenAI(api_key=api_key)
+    client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
     
     # Build the request parameters
     request_params = {
@@ -297,8 +315,8 @@ def retrieve_with_query_expansion(collection, query, n_results=3):
 def delete_document_by_source(collection, source_filename):
     """Delete all chunks from a specific document source."""
     try:
-        # Get all data to find chunks from this source
-        all_data = collection.get(include=["documents", "metadatas", "ids"])
+        # Get all data to find chunks from this source (IDs returned by default)
+        all_data = collection.get(include=["documents", "metadatas"])
         
         # Find IDs of chunks from this source
         ids_to_delete = []
@@ -331,7 +349,7 @@ if 'document_metadata' not in st.session_state:
 # Try to recover existing database on startup
 if not st.session_state.files_processed:
     try:
-        client = chromadb.PersistentClient(path=".chroma_database")
+        client = chromadb.PersistentClient(path=Config.CHROMA_DB_PATH)
         existing_collections = client.list_collections()
         
         # Check if our collection exists
@@ -371,14 +389,21 @@ if not st.session_state.files_processed:
 # =====================
 
 # Display title with DGT logo
-st.markdown("""
-<div style="display: flex; align-items: center; margin-bottom: 1rem;">
-    <img src="data:image/webp;base64,{}" width="60" style="margin-right: 15px;">
-    <h1 style="margin: 0; font-size: 2.5rem; font-weight: 600;">RAG Chatbot Testing Interface</h1>
-</div>
-""".format(
-    __import__('base64').b64encode(open('images/DGT.webp', 'rb').read()).decode()
-), unsafe_allow_html=True)
+try:
+    logo_data = __import__('base64').b64encode(open(Config.LOGO_PATH, 'rb').read()).decode()
+    st.markdown("""
+    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+        <img src="data:image/webp;base64,{}" width="60" style="margin-right: 15px;">
+        <h1 style="margin: 0; font-size: 2.5rem; font-weight: 600;">RAG Chatbot Testing Interface</h1>
+    </div>
+    """.format(logo_data), unsafe_allow_html=True)
+except FileNotFoundError:
+    # Fallback if logo not found
+    st.markdown("""
+    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+        <h1 style="margin: 0; font-size: 2.5rem; font-weight: 600;">🤖 RAG Chatbot Testing Interface</h1>
+    </div>
+    """, unsafe_allow_html=True)
 st.write("Compare AI responses with and without document context (RAG)")
 
 # Show database recovery notification
@@ -462,13 +487,13 @@ with tab1:
             st.error("Please enter a question!")
         else:
             # Get current parameters from session state (set in Parameters tab)
-            temperature = st.session_state.get('temperature', LLM_TEMPERATURE)
-            max_tokens = st.session_state.get('max_tokens', LLM_MAX_TOKENS)
-            top_p = st.session_state.get('top_p', LLM_TOP_P)
-            system_prompt = st.session_state.get('system_prompt', LLM_SYSTEM_PROMPT)
-            chunk_size = st.session_state.get('chunk_size', CHUNK_SIZE)
-            chunk_overlap = st.session_state.get('chunk_overlap', CHUNK_OVERLAP)
-            n_results = st.session_state.get('n_results', CHROMA_N_RESULTS)
+            temperature = st.session_state.get('temperature', Config.LLM_TEMPERATURE)
+            max_tokens = st.session_state.get('max_tokens', Config.LLM_MAX_TOKENS)
+            top_p = st.session_state.get('top_p', Config.LLM_TOP_P)
+            system_prompt = st.session_state.get('system_prompt', Config.SYSTEM_PROMPT)
+            chunk_size = st.session_state.get('chunk_size', Config.CHUNK_SIZE)
+            chunk_overlap = st.session_state.get('chunk_overlap', Config.CHUNK_OVERLAP)
+            n_results = st.session_state.get('n_results', Config.N_RESULTS)
             
             # Determine if we have documents for RAG
             has_documents = st.session_state.files_processed and st.session_state.collection is not None
@@ -491,8 +516,7 @@ with tab1:
                         else:
                             relevant_chunks, scores, metadatas = [], [], []
                         
-                        # Fallback to standard retrieval if expansion fails or is disabled
-                        metadatas = []
+                        # Fallback to standard retrieval if expansion fails or is disabled  
                         if not relevant_chunks:
                             query_embedding = embed_query_openai(user_query)
                             results = st.session_state.collection.query(
@@ -527,7 +551,7 @@ with tab1:
                                 temperature=temperature,
                                 top_p=top_p,
                                 system_prompt=system_prompt,
-                                stop=LLM_STOP
+                                stop=None
                             )
                             
                             # Display the answer
@@ -574,7 +598,7 @@ with tab1:
                             temperature=temperature,
                             top_p=top_p,
                             system_prompt=system_prompt,
-                            stop=LLM_STOP
+                            stop=None
                         )
                         
                         # Display the answer
@@ -804,8 +828,8 @@ with tab2:
             st.write(f"- {file.name} ({file.size:,} bytes) {status}")
         
         # Get current chunking parameters
-        chunk_size = st.session_state.get('chunk_size', CHUNK_SIZE)
-        chunk_overlap = st.session_state.get('chunk_overlap', CHUNK_OVERLAP)
+        chunk_size = st.session_state.get('chunk_size', Config.CHUNK_SIZE)
+        chunk_overlap = st.session_state.get('chunk_overlap', Config.CHUNK_OVERLAP)
         
         st.info(f"Will process with current settings: {chunk_size} chars per chunk, {chunk_overlap} chars overlap")
         
@@ -813,7 +837,7 @@ with tab2:
             with st.spinner("Processing documents..."):
                 try:
                     # Save uploaded files to sample_docs directory
-                    sample_docs_dir = "sample_docs"
+                    sample_docs_dir = str(Config.SAMPLE_DOCS_DIR)
                     os.makedirs(sample_docs_dir, exist_ok=True)
                     
                     # Clear existing files
@@ -870,7 +894,7 @@ with tab2:
                             st.write(f"**Embeddings created:** {len(embeddings)} vectors of length {len(embeddings[0])}")
                         
                         # Store in vector database
-                        client = chromadb.PersistentClient(path=".chroma_database")
+                        client = chromadb.PersistentClient(path=Config.CHROMA_DB_PATH)
                         
                         # Get or create collection
                         if st.session_state.collection is None:
@@ -933,7 +957,7 @@ with tab3:
     with col1:
         temperature = tooltip_slider(
             "Temperature", 0.0, 1.0, 
-            st.session_state.get('temperature', LLM_TEMPERATURE), 0.1,
+            st.session_state.get('temperature', Config.LLM_TEMPERATURE), 0.1,
             "Controls randomness in responses. Lower = more deterministic, Higher = more creative",
             key="temp_slider"
         )
@@ -941,7 +965,7 @@ with tab3:
         
         max_tokens = tooltip_slider(
             "Max Tokens", 64, 2048, 
-            st.session_state.get('max_tokens', LLM_MAX_TOKENS), 64,
+            st.session_state.get('max_tokens', Config.LLM_MAX_TOKENS), 64,
             "Maximum length of the generated response. More tokens = longer responses",
             key="tokens_slider"
         )
@@ -950,7 +974,7 @@ with tab3:
     with col2:
         top_p = tooltip_slider(
             "Top P", 0.0, 1.0, 
-            st.session_state.get('top_p', LLM_TOP_P), 0.1,
+            st.session_state.get('top_p', Config.LLM_TOP_P), 0.1,
             "Controls diversity via nucleus sampling. Lower = more focused, Higher = more diverse",
             key="top_p_slider"
         )
@@ -959,7 +983,7 @@ with tab3:
     # System Prompt
     system_prompt = tooltip_text_area(
         "System Prompt", 
-        st.session_state.get('system_prompt', LLM_SYSTEM_PROMPT),
+        st.session_state.get('system_prompt', Config.SYSTEM_PROMPT),
         "Instructions that control how the AI behaves. This prompt determines whether the AI uses only provided context or can use general knowledge.",
         key="system_prompt_area"
     )
@@ -974,7 +998,7 @@ with tab3:
     with col1:
         chunk_size = tooltip_slider(
             "Chunk Size", 100, 1000, 
-            st.session_state.get('chunk_size', CHUNK_SIZE), 50,
+            st.session_state.get('chunk_size', Config.CHUNK_SIZE), 50,
             "Size of text chunks in characters. Smaller = more specific, Larger = more context",
             key="chunk_size_slider"
         )
@@ -982,7 +1006,7 @@ with tab3:
         
         chunk_overlap = tooltip_slider(
             "Chunk Overlap", 0, 200, 
-            st.session_state.get('chunk_overlap', CHUNK_OVERLAP), 25,
+            st.session_state.get('chunk_overlap', Config.CHUNK_OVERLAP), 25,
             "Characters shared between adjacent chunks. Prevents information loss at boundaries",
             key="chunk_overlap_slider"
         )
@@ -991,7 +1015,7 @@ with tab3:
     with col2:
         n_results = tooltip_slider(
             "Number of Results", 1, 10, 
-            st.session_state.get('n_results', CHROMA_N_RESULTS), 1,
+            st.session_state.get('n_results', Config.N_RESULTS), 1,
             "How many relevant chunks to retrieve for each query. More = richer context but potential noise",
             key="n_results_slider"
         )
@@ -1036,14 +1060,14 @@ with tab3:
     st.subheader("📋 Current Configuration")
     config_data = {
         "Model Parameters": {
-            "Temperature": st.session_state.get('temperature', LLM_TEMPERATURE),
-            "Max Tokens": st.session_state.get('max_tokens', LLM_MAX_TOKENS),
-            "Top P": st.session_state.get('top_p', LLM_TOP_P)
+            "Temperature": st.session_state.get('temperature', Config.LLM_TEMPERATURE),
+            "Max Tokens": st.session_state.get('max_tokens', Config.LLM_MAX_TOKENS),
+            "Top P": st.session_state.get('top_p', Config.LLM_TOP_P)
         },
         "RAG Parameters": {
-            "Chunk Size": st.session_state.get('chunk_size', CHUNK_SIZE),
-            "Chunk Overlap": st.session_state.get('chunk_overlap', CHUNK_OVERLAP),
-            "Results Retrieved": st.session_state.get('n_results', CHROMA_N_RESULTS)
+            "Chunk Size": st.session_state.get('chunk_size', Config.CHUNK_SIZE),
+            "Chunk Overlap": st.session_state.get('chunk_overlap', Config.CHUNK_OVERLAP),
+            "Results Retrieved": st.session_state.get('n_results', Config.N_RESULTS)
         }
     }
     st.json(config_data)
@@ -1110,11 +1134,11 @@ with tab4:
         chunk_metadatas = retrieval.get('metadatas', [])
         
         for i, (chunk, score) in enumerate(zip(retrieval['chunks'], retrieval['scores']), 1):
-            # Determine match quality
-            if score < 0.3:
+            # Determine match quality - Fixed thresholds to be more accurate
+            if score < 0.4:
                 quality = "🟢 Excellent"
                 quality_color = "success"
-            elif score < 0.6:
+            elif score < 0.7:
                 quality = "🟡 Good"
                 quality_color = "warning"
             else:
@@ -1157,9 +1181,9 @@ with tab4:
                     st.metric("Doc Chunks", total_chunks)
                 
                 # Similarity explanation
-                if score < 0.3:
+                if score < 0.4:
                     st.success("🎯 **Excellent match** - This chunk is highly relevant to your query")
-                elif score < 0.6:
+                elif score < 0.7:
                     st.warning("👍 **Good match** - This chunk contains relevant information")
                 else:
                     st.error("⚠️ **Fair match** - This chunk may contain some relevant information but could be noisy")
@@ -1322,7 +1346,7 @@ with tab6:
         
         # Get actual chunk IDs from the database
         try:
-            all_data = st.session_state.collection.get(include=["ids"])
+            all_data = st.session_state.collection.get()  # IDs are returned by default
             actual_chunk_ids = all_data.get("ids", [])
         except Exception as e:
             st.error(f"Error getting chunk IDs: {e}")
@@ -1411,9 +1435,10 @@ with tab6:
                     
                     if st.button("🔍 Find Similar Chunks"):
                         try:
-                            # Use the chunk's content to find similar chunks
+                            # Use our OpenAI embedding function instead of query_texts
+                            query_embedding = embed_query_openai(chunk_content)
                             similar_results = st.session_state.collection.query(
-                                query_texts=[chunk_content],
+                                query_embeddings=[query_embedding],
                                 n_results=similarity_count + 1  # +1 because it will include itself
                             )
                             
@@ -1464,10 +1489,23 @@ with tab6:
         st.subheader("📚 Bulk Chunk Browser")
         st.write("Browse all chunks with their IDs and basic info")
         
-        if st.button("📋 Show All Chunk IDs and Previews"):
+        # Initialize session state for chunk browser
+        if 'show_all_chunks' not in st.session_state:
+            st.session_state.show_all_chunks = False
+        
+        # Toggle buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("📋 Show All Chunk IDs and Previews"):
+                st.session_state.show_all_chunks = True
+        with col2:
+            if st.button("❌ Hide Chunk Browser") and st.session_state.show_all_chunks:
+                st.session_state.show_all_chunks = False
+        
+        if st.session_state.show_all_chunks:
             try:
-                # Get all data including IDs and documents
-                all_data = st.session_state.collection.get(include=["ids", "documents", "metadatas"])
+                # Get all data including documents and metadata (IDs returned by default)
+                all_data = st.session_state.collection.get(include=["documents", "metadatas"])
                 chunk_ids = all_data.get("ids", [])
                 chunk_docs = all_data.get("documents", [])
                 chunk_metas = all_data.get("metadatas", [])

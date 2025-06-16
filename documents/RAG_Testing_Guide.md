@@ -519,4 +519,455 @@ This comprehensive testing guide provides both structured core tests for demonst
 
 ---
 
-*This guide will continue to evolve as we discover new testing scenarios and optimization opportunities. The systematic approach ensures consistent, reproducible results while building deep understanding of RAG system behavior.* 
+*This guide will continue to evolve as we discover new testing scenarios and optimization opportunities. The systematic approach ensures consistent, reproducible results while building deep understanding of RAG system behavior.*
+
+# 🎯 **COMPREHENSIVE TEST QUESTION BANK**
+
+*Based on the demo context files: donuts, pizza, ISS, Hoover Dam, Golden Gate Bridge, and Empire State Building*
+
+---
+
+## 🎉 **FUN QUESTIONS**
+
+### Food History Fun
+- "What's the connection between Dutch settlers and modern donuts?"
+- "Who invented the donut hole and why did they do it?"
+- "Which came first: pizza or donuts, and by how many years?"
+- "What role did World War II play in making donuts patriotic?"
+- "Why do police officers love donuts so much?"
+- "What's the most expensive donut ever sold and what made it so special?"
+- "How did a sea captain from Maine change breakfast forever?"
+- "What do ancient Egyptians and modern Americans have in common when it comes to fried food?"
+
+### Engineering Marvels Fun
+- "Which engineering project took longer: the Golden Gate Bridge or the Empire State Building?"
+- "What do the Golden Gate Bridge and the ISS have in common in terms of color choices?"
+- "How many Empire State Buildings could you stack to reach the ISS?"
+- "Which weighs more: the Hoover Dam or 1000 Empire State Buildings?"
+
+---
+
+## 🔗 **CROSS-CONTEXT QUESTIONS**
+
+### Time Period Connections
+- "What major engineering projects were happening in America during the 1930s?"
+- "Compare the construction timelines of the Empire State Building, Golden Gate Bridge, and Hoover Dam - what was happening in America during this era?"
+- "How did the Great Depression affect the construction of major American landmarks?"
+
+### International Collaboration vs American Independence
+- "Compare the international cooperation required for the ISS versus the purely American efforts of 1930s construction projects"
+- "How many countries worked together on the ISS compared to the Golden Gate Bridge project?"
+
+### Materials and Innovation
+- "What innovative materials or techniques were pioneered in 1930s construction that might have influenced modern space station design?"
+- "Compare the concrete innovations of the Hoover Dam with the steel innovations of the Golden Gate Bridge"
+
+### Scale and Perspective
+- "If you laid all the wire from the Golden Gate Bridge end to end, how many times could you circle the ISS?"
+- "How does the daily energy consumption of the ISS compare to the power generation of Hoover Dam?"
+- "Which has more visitors per year: the Empire State Building or the ISS?"
+
+### Cultural Impact Across Eras
+- "How did donuts become as American as the Golden Gate Bridge?"
+- "Compare the cultural significance of pizza in America versus the cultural significance of the Empire State Building"
+
+---
+
+## 🧠 **INTERESTING & THOUGHT-PROVOKING QUESTIONS**
+
+### Historical What-Ifs
+- "What would have happened to donut culture if Captain Gregory had never invented the hole?"
+- "How might pizza have evolved differently if tomatoes had been accepted by wealthy Europeans earlier?"
+- "What if the Golden Gate Bridge had been built as a cantilever bridge instead of suspension?"
+
+### Technical Deep Dives
+- "Explain the physics behind why the Golden Gate Bridge can sway 27 feet without breaking"
+- "How does the ISS maintain its orbit without falling back to Earth?"
+- "Why did the Hoover Dam engineers need to cool concrete for 2 years instead of 125?"
+- "What makes the Empire State Building's foundation able to support 365,000 tons?"
+
+### Innovation and Problem Solving
+- "What was more innovative: putting a hole in a donut or putting cheese on flatbread?"
+- "Compare the safety innovations of 1930s construction projects with modern ISS safety protocols"
+- "How did the Salvation Army Doughnut Girls influence American food culture?"
+
+### Modern Relevance
+- "How do the environmental challenges of the ISS compare to the environmental impact of the Hoover Dam?"
+- "What lessons from 1930s mega-projects could apply to modern space exploration?"
+- "How has the gourmet donut revolution changed since the artisanal food movement began?"
+
+---
+
+## 🎪 **SURPRISE ME QUESTIONS**
+
+### Unexpected Connections
+- "What do astronauts on the ISS and construction workers on the Golden Gate Bridge have in common regarding safety equipment?"
+- "How is making the perfect pizza dough similar to mixing concrete for the Hoover Dam?"
+- "What role did fog play in both Golden Gate Bridge construction and San Francisco's sourdough bread culture?"
+
+### Numbers Game
+- "How many donuts would you need to stack to reach the height of the Empire State Building?"
+- "If you could eat one slice of pizza for every person who has visited the ISS, how many slices would that be?"
+- "How many years would it take to eat all the donuts Americans consume annually if you ate one per day?"
+
+### Alternative History
+- "What if the ISS had been built in the 1930s using Hoover Dam construction techniques?"
+- "How would pizza delivery work if everyone lived on the ISS?"
+- "What if donuts had been invented in Italy and pizza in America?"
+
+### Mind-Bending Comparisons
+- "Which is more complex: the recipe for a perfect Neapolitan pizza or the life support systems of the ISS?"
+- "What requires more precision: stretching pizza dough or positioning the ISS in orbit?"
+- "Which took more international cooperation: creating modern pizza varieties or building the ISS?"
+
+### Future Speculation
+- "Will astronauts ever make fresh donuts in space, and what would be the challenges?"
+- "How might pizza delivery change if we had regular flights to the ISS?"
+- "What would a space-based version of the Golden Gate Bridge look like?"
+
+### Philosophical Food for Thought
+- "What does the evolution of donuts from ancient fried dough to Instagram-worthy art tell us about human creativity?"
+- "How do mega-projects like the ISS compare to ancient wonders in terms of human achievement?"
+- "What makes something become an icon: engineering excellence, cultural significance, or perfect timing?"
+
+---
+
+## 🎯 **TESTING STRATEGY RECOMMENDATIONS**
+
+### For Demonstrations
+1. Start with **Fun Questions** to engage your audience
+2. Use **Cross-Context Questions** to show multi-document capabilities
+3. End with **Surprise Me Questions** to showcase the system's flexibility
+
+### For Technical Validation
+1. Use **Technical Deep Dives** to test complex retrieval
+2. Try **Numbers Game** questions to test specific fact extraction
+3. Use **Historical What-Ifs** to test reasoning capabilities
+
+### For Parameter Optimization
+1. Start with simple **Fun Questions** using default parameters
+2. Progress to complex **Cross-Context Questions** that may require optimization
+3. Use **Technical Deep Dives** to validate your optimized settings
+
+### For Stress Testing
+1. **Alternative History** questions test the system's boundaries
+2. **Mind-Bending Comparisons** require sophisticated retrieval
+3. **Future Speculation** tests how well the system handles hypothetical scenarios
+
+---
+
+*Remember: The best RAG testing combines systematic validation with creative exploration. These questions are designed to be both educational and entertaining while thoroughly exercising your RAG system's capabilities.*
+
+---
+
+# 🔧 **PARAMETER OPTIMIZATION MASTERCLASS**
+
+*Understanding how, when, and why parameter changes affect your RAG system performance*
+
+---
+
+## ⏰ **CRITICAL TIMING: When Parameters Take Effect**
+
+### 🔄 **DOCUMENT PROCESSING TIME PARAMETERS**
+*These parameters only matter DURING document upload and chunking. Once processing is complete, changing these has NO EFFECT until you reprocess documents.*
+
+#### **Chunk Size**
+- **When It Matters**: During document upload and processing
+- **Effect**: Determines how text is divided into searchable segments
+- **To Apply Changes**: Must reprocess/re-upload documents
+- **No Effect After**: Processing is complete - changing this won't affect existing chunks
+
+#### **Chunk Overlap**
+- **When It Matters**: During document upload and processing  
+- **Effect**: Determines how much text is shared between adjacent chunks
+- **To Apply Changes**: Must reprocess/re-upload documents
+- **No Effect After**: Processing is complete - existing overlaps are fixed
+
+### 🔍 **QUERY TIME PARAMETERS**
+*These parameters take effect IMMEDIATELY when you ask questions. No reprocessing needed.*
+
+#### **Number of Results (n_results)**
+- **When It Matters**: During each question/query
+- **Effect**: How many chunks are retrieved from the database
+- **To Apply Changes**: Takes effect on next question immediately
+- **Always Active**: Every query uses current setting
+
+#### **Temperature, Max Tokens, Top P**
+- **When It Matters**: During AI response generation
+- **Effect**: Controls creativity, length, and randomness of answers
+- **To Apply Changes**: Takes effect on next question immediately
+- **Always Active**: Every response uses current settings
+
+#### **System Prompt**
+- **When It Matters**: During AI response generation
+- **Effect**: Controls AI behavior and response style
+- **To Apply Changes**: Takes effect on next question immediately
+- **Always Active**: Every response uses current prompt
+
+---
+
+## 🎯 **PARAMETER IMPACT ANALYSIS FOR YOUR QUESTION BANK**
+
+### 📊 **Number of Results (n_results) - QUERY TIME PARAMETER**
+
+#### **Most Critical Parameter for Cross-Context Questions**
+
+**⚡ IMMEDIATE EFFECT - No Reprocessing Needed**
+
+**Example Problem:**
+- Question: *"Compare the construction timelines of the Empire State Building, Golden Gate Bridge, and Hoover Dam"*
+- **n_results = 3**: Might only retrieve chunks about Empire State Building
+- **n_results = 8-10**: Gets chunks from all three documents
+
+**Why This Happens:**
+- Each document has multiple chunks about construction
+- With low n_results, similarity search might find 3 great Empire State chunks
+- Higher n_results forces the system to look broader across documents
+
+**Questions Most Affected:**
+- ✅ **All Cross-Context Questions** - Need multiple documents represented
+- ✅ **"Which weighs more: Hoover Dam or 1000 Empire State Buildings?"** - Needs weight data from both
+- ✅ **"What major engineering projects were happening in America during the 1930s?"** - Needs all three 1930s projects
+
+**Recommended Settings:**
+- **Simple single-document questions**: 3-5 results
+- **Cross-context questions**: 8-12 results
+- **Complex comparisons**: 10-15 results
+
+---
+
+### 📏 **Chunk Size - PROCESSING TIME PARAMETER**
+
+#### **Critical for Technical Deep Dives and Complex Information**
+
+**🔄 REQUIRES REPROCESSING - Must Re-upload Documents**
+
+**Example Problem:**
+- Question: *"Why did Hoover Dam engineers need to cool concrete for 2 years instead of 125?"*
+- **Small chunks (300-500)**: Might split the cooling explanation across multiple chunks
+- **Larger chunks (700-1000)**: Captures the complete technical explanation
+
+**Why This Happens:**
+- Technical explanations often span multiple paragraphs
+- Small chunks break up cause-and-effect relationships
+- Large chunks preserve context but may include irrelevant information
+
+**Questions Most Affected:**
+- ✅ **"Explain the physics behind why the Golden Gate Bridge can sway 27 feet"** - Complex physics explanation
+- ✅ **"How does the ISS maintain its orbit without falling back to Earth?"** - Multi-step technical process
+- ✅ **"What makes the Empire State Building's foundation able to support 365,000 tons?"** - Engineering details
+
+**Recommended Settings:**
+- **Simple facts**: 400-600 characters
+- **Technical explanations**: 700-1000 characters  
+- **Historical narratives**: 800-1200 characters
+
+---
+
+### 🔄 **Chunk Overlap - PROCESSING TIME PARAMETER**
+
+#### **Essential for Narrative Flow and Connected Information**
+
+**🔄 REQUIRES REPROCESSING - Must Re-upload Documents**
+
+**Example Problem:**
+- Question: *"How did the Salvation Army Doughnut Girls influence American food culture?"*
+- **Low overlap (0-50)**: Might miss connections between wartime service and cultural impact
+- **Higher overlap (100-150)**: Preserves the narrative flow from service to cultural significance
+
+**Why This Happens:**
+- Stories and explanations flow across chunk boundaries
+- Key information often appears at transitions between topics
+- Overlap ensures important connections aren't lost
+
+**Questions Most Affected:**
+- ✅ **"What's the connection between Dutch settlers and modern donuts?"** - Historical progression
+- ✅ **"How did a sea captain from Maine change breakfast forever?"** - Cause and effect story
+- ✅ **"What role did World War II play in making donuts patriotic?"** - Historical narrative
+
+**Recommended Settings:**
+- **Factual queries**: 50-100 characters overlap
+- **Historical narratives**: 100-150 characters overlap
+- **Complex processes**: 125-200 characters overlap
+
+---
+
+### 🎛️ **Temperature & Creativity Parameters - QUERY TIME PARAMETERS**
+
+#### **Affects Reasoning and Synthesis Quality**
+
+**⚡ IMMEDIATE EFFECT - No Reprocessing Needed**
+
+**Example Impact:**
+- Question: *"What was more innovative: putting a hole in a donut or putting cheese on flatbread?"*
+- **Low temperature (0.1-0.3)**: Factual comparison, less creative reasoning
+- **Higher temperature (0.5-0.8)**: More creative analysis and synthesis
+
+**Questions Most Affected:**
+- ✅ **All "Surprise Me" questions** - Require creative thinking
+- ✅ **"What makes something become an icon: engineering excellence, cultural significance, or perfect timing?"** - Philosophical reasoning
+- ✅ **Alternative history questions** - Need creative extrapolation
+
+---
+
+## 🔧 **SPECIFIC PARAMETER STRATEGIES FOR QUESTION TYPES**
+
+### 🎉 **Fun Questions Strategy**
+```
+PROCESSING TIME (Reprocess Required):
+Chunk Size: 500-700
+Overlap: 100
+
+QUERY TIME (Immediate Effect):
+Results: 5-8
+Temperature: 0.4-0.6
+```
+**Why:** Most fun questions need specific facts but benefit from some creative presentation.
+
+### 🔗 **Cross-Context Questions Strategy**
+```
+PROCESSING TIME (Reprocess Required):
+Chunk Size: 600-800
+Overlap: 125
+
+QUERY TIME (Immediate Effect):
+Results: 10-15
+Temperature: 0.3-0.5
+```
+**Why:** Need broad retrieval across documents with factual accuracy for comparisons.
+
+### 🧠 **Technical Deep Dives Strategy**
+```
+PROCESSING TIME (Reprocess Required):
+Chunk Size: 800-1000
+Overlap: 150
+
+QUERY TIME (Immediate Effect):
+Results: 6-10
+Temperature: 0.2-0.4
+```
+**Why:** Technical explanations need large chunks to preserve complex information with high accuracy.
+
+### 🎪 **Surprise Me Questions Strategy**
+```
+PROCESSING TIME (Reprocess Required):
+Chunk Size: 600-800
+Overlap: 125
+
+QUERY TIME (Immediate Effect):
+Results: 8-12
+Temperature: 0.6-0.8
+```
+**Why:** Creative questions need diverse information and higher creativity for synthesis.
+
+---
+
+## ⚠️ **COMMON FAILURE PATTERNS & SOLUTIONS**
+
+### **Problem 1: "I don't have enough information"**
+**Likely Cause:** Too few results retrieved
+**Parameter Type:** 🔍 QUERY TIME - Immediate fix
+**Solution:** Increase n_results from 3 → 8-10
+**Test With:** *"Compare international cooperation: ISS vs Golden Gate Bridge"*
+
+### **Problem 2: Incomplete technical explanations**
+**Likely Cause:** Chunk size too small, breaking up explanations
+**Parameter Type:** 🔄 PROCESSING TIME - Requires reprocessing
+**Solution:** Increase chunk size from 500 → 800-1000, then re-upload documents
+**Test With:** *"How does the ISS maintain its orbit without falling back to Earth?"*
+
+### **Problem 3: Missing narrative connections**
+**Likely Cause:** Insufficient chunk overlap
+**Parameter Type:** 🔄 PROCESSING TIME - Requires reprocessing
+**Solution:** Increase overlap from 50 → 125-150, then re-upload documents
+**Test With:** *"What's the connection between Dutch settlers and modern donuts?"*
+
+### **Problem 4: Only getting info from one document in multi-doc questions**
+**Likely Cause:** n_results too low + query expansion not finding diverse content
+**Parameter Type:** 🔍 QUERY TIME - Immediate fix
+**Solution:** Increase n_results AND ensure query expansion is enabled
+**Test With:** *"What major engineering projects were happening in America during the 1930s?"*
+
+### **Problem 5: Boring, factual answers to creative questions**
+**Likely Cause:** Temperature too low
+**Parameter Type:** 🔍 QUERY TIME - Immediate fix
+**Solution:** Increase temperature from 0.2 → 0.6-0.8
+**Test With:** *"What if donuts had been invented in Italy and pizza in America?"*
+
+---
+
+## 🧪 **DIAGNOSTIC TESTING APPROACH**
+
+### **Step 1: Baseline Test**
+Start with a challenging cross-context question:
+*"How many countries worked together on the ISS compared to the Golden Gate Bridge project?"*
+
+### **Step 2: Parameter Isolation**
+
+#### **🔍 QUERY TIME PARAMETERS (Test First - Immediate Results)**
+1. **Results**: 3 → 5 → 8 → 12 (find minimum for complete answer)
+2. **Temperature**: 0.2 → 0.4 → 0.6 → 0.8 (find optimal creativity level)
+
+#### **🔄 PROCESSING TIME PARAMETERS (Test If Query Time Fixes Don't Work)**
+3. **Chunk Size**: 500 → 700 → 1000 (requires reprocessing each time)
+4. **Overlap**: 50 → 100 → 150 (requires reprocessing each time)
+
+### **Step 3: Optimization Validation**
+Test your optimized settings on different question types:
+- Simple fact: *"How tall is the Empire State Building?"*
+- Cross-context: *"Which engineering project took longer: Golden Gate Bridge or Empire State Building?"*
+- Technical: *"Explain the physics behind why the Golden Gate Bridge can sway 27 feet"*
+- Creative: *"What do astronauts and Golden Gate Bridge workers have in common regarding safety?"*
+
+---
+
+## 🎯 **PARAMETER TIMING CHEAT SHEET**
+
+| Parameter | When It Takes Effect | Requires Reprocessing | Immediate Effect |
+|-----------|---------------------|----------------------|------------------|
+| **Chunk Size** | 🔄 Document Processing | ✅ YES | ❌ NO |
+| **Chunk Overlap** | 🔄 Document Processing | ✅ YES | ❌ NO |
+| **Number of Results** | 🔍 Each Query | ❌ NO | ✅ YES |
+| **Temperature** | 🔍 Each Query | ❌ NO | ✅ YES |
+| **Max Tokens** | 🔍 Each Query | ❌ NO | ✅ YES |
+| **Top P** | 🔍 Each Query | ❌ NO | ✅ YES |
+| **System Prompt** | 🔍 Each Query | ❌ NO | ✅ YES |
+| **Query Expansion** | 🔍 Each Query | ❌ NO | ✅ YES |
+
+---
+
+## 🎯 **OPTIMIZATION WORKFLOW**
+
+### **Phase 1: Quick Wins (No Reprocessing)**
+1. Test different **n_results** values (3, 5, 8, 12, 15)
+2. Adjust **temperature** for question type (factual vs creative)
+3. Enable/disable **query expansion** based on question complexity
+4. Modify **system prompt** for specific use cases
+
+### **Phase 2: Deep Optimization (Requires Reprocessing)**
+*Only do this if Phase 1 doesn't solve your problems*
+1. Analyze failed questions to identify if they need larger chunks
+2. Test **chunk size** increases (500 → 700 → 1000)
+3. Test **overlap** increases (50 → 100 → 150)
+4. Reprocess documents and retest
+
+### **Phase 3: Fine-Tuning**
+1. Create parameter profiles for different question types
+2. Document optimal settings for your specific use cases
+3. Build testing protocols for new document types
+
+---
+
+## 📊 **COMPLETE PARAMETER REFERENCE TABLE**
+
+| Question Type | Chunk Size | Overlap | Results | Temperature | Reprocess? |
+|---------------|------------|---------|---------|-------------|------------|
+| Simple Facts | 400-600 | 75-100 | 3-5 | 0.2-0.4 | If chunks too small |
+| Cross-Context | 600-800 | 100-125 | 8-12 | 0.3-0.5 | If missing connections |
+| Technical Deep | 800-1000 | 125-150 | 6-10 | 0.2-0.4 | If explanations incomplete |
+| Creative/Surprise | 600-800 | 100-125 | 8-12 | 0.6-0.8 | If missing context |
+| Historical Narrative | 700-900 | 125-150 | 6-10 | 0.4-0.6 | If story fragmented |
+
+**🔑 Key Insight:** Always try adjusting QUERY TIME parameters first (Results, Temperature) before reprocessing documents with new PROCESSING TIME parameters (Chunk Size, Overlap).
+
+--- 

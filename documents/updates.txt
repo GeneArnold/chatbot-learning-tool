@@ -16,3 +16,5 @@ When I process a document there is a bunch of good information that shows up on 
 Can you add the actual chunk_id to the results so we can take that id and look up the chunk in the Chunk ID Explorer
 
 Next to the model name place a description what is special and is expected from that model
+
+If expanded query is checked show the actual query and the expended version so we can see how it was altered
