@@ -251,9 +251,231 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 # 🚀 **ADVANCED COST OPTIMIZATION TESTS**
 
-## 📊 **TEST SERIES 4: SESSION COST MANAGEMENT**
+## 💰 **TEST SERIES 4: COST-QUALITY TRADE-OFF MASTERY**
 
-### Test 4.1: Complete Session Cost Analysis
+### Test 4.1: Document Return Count Optimization
+**Objective:** Understand when more documents help vs. hurt cost efficiency
+
+**Educational Goal:** Master the balance between context and cost
+
+**Steps:**
+1. **Simple Fact Retrieval Test:**
+   - Upload Golden Gate Bridge document
+   - Question: "What is the Golden Gate Bridge's height?"
+   
+   **Test with 3 documents returned:**
+   - Set Number of Results: 3
+   - Ask question, note answer quality and cost
+   
+   **Test with 8 documents returned:**
+   - Set Number of Results: 8  
+   - Ask same question, compare cost vs. quality improvement
+   
+   **Expected Learning**: More documents = minimal quality gain for simple facts but higher costs
+
+2. **Cross-Topic Synthesis Test:**
+   - Upload Golden Gate Bridge AND Empire State Building documents
+   - Question: "Compare the construction challenges of these two landmarks"
+   
+   **Test with 3 documents:**
+   - Note if you get information from both landmarks
+   
+   **Test with 8 documents:**
+   - See improved coverage across both topics
+   
+   **Expected Learning**: Multi-topic queries need more documents despite higher costs
+
+3. **Complex Topic Exploration:**
+   - Question: "Explain the engineering innovations of the Golden Gate Bridge"
+   
+   **Test different document counts**: 1, 3, 5, 8
+   - Find the point where additional documents stop improving answers
+   - Identify the "diminishing returns" threshold
+
+**Key Insights:**
+- ✅ **Simple facts**: 1-3 documents usually sufficient
+- ✅ **Multi-topic queries**: Need 5-8 documents for good coverage  
+- ✅ **Complex topics**: 3-5 documents for comprehensive answers
+- ✅ **Diminishing returns**: Beyond optimal count, costs rise faster than quality
+
+---
+
+### Test 4.2: Chunk Size vs. Content Coherence
+**Objective:** Learn how chunk size affects both cost and answer quality
+
+**Educational Goal:** Understand when larger chunks justify higher costs
+
+**Steps:**
+1. **Small Chunk Test (Simple Query):**
+   - Set Chunk Size: 300, Overlap: 50
+   - Process Golden Gate Bridge document
+   - Question: "What materials were used in the Golden Gate Bridge?"
+   - Note: Embedding cost, retrieval quality, answer completeness
+
+2. **Large Chunk Test (Same Query):**
+   - Set Chunk Size: 800, Overlap: 100
+   - Reprocess same document  
+   - Ask same question
+   - Compare: Higher embedding cost but better context coherence?
+
+3. **Complex Narrative Test:**
+   - Question: "Describe the complete construction timeline of the Golden Gate Bridge"
+   
+   **Test with small chunks (300):**
+   - Note if timeline gets fragmented across chunks
+   
+   **Test with large chunks (800):**
+   - See if better chunk coherence improves narrative flow
+
+**Expected Learning:**
+- ✅ **Simple facts**: Small chunks work fine, save money
+- ✅ **Complex narratives**: Large chunks keep related info together
+- ✅ **Embedding costs**: Larger chunks cost more upfront but may need fewer total chunks
+- ✅ **Boundary effects**: Small chunks can split important information
+
+---
+
+### Test 4.3: Max Tokens vs. Response Quality  
+**Objective:** Understand output token cost control
+
+**Educational Goal:** Learn to balance answer completeness with output costs
+
+**Steps:**
+1. **Brief Answer Test:**
+   - Set Max Tokens: 100
+   - Question: "Briefly explain how the Golden Gate Bridge was built"
+   - Note: Answer completeness vs. low output cost
+
+2. **Detailed Answer Test:**
+   - Set Max Tokens: 500
+   - Ask same question but phrase as: "Explain in detail how the Golden Gate Bridge was built"
+   - Compare: Much higher output cost, proportionally better answer?
+
+3. **Question Phrasing Impact:**
+   - Max Tokens: 300 (fixed)
+   - Test different phrasings:
+     - "Summarize Golden Gate Bridge construction" 
+     - "Describe Golden Gate Bridge construction"
+     - "Explain Golden Gate Bridge construction process"
+   - See how phrasing affects response length and cost
+
+**Expected Learning:**
+- ✅ **Output costs 2x input costs** - most expensive part of LLM usage
+- ✅ **Question phrasing** directly affects response length and cost
+- ✅ **max_tokens** provides hard cost ceiling but may cut good answers
+- ✅ **Brief requests** save significant money for simple needs
+
+---
+
+### Test 4.4: Query Expansion Cost-Benefit Analysis
+**Objective:** Learn when query expansion justifies extra input tokens
+
+**Educational Goal:** Understand expansion trade-offs for different query types
+
+**Steps:**
+1. **Simple Query Test:**
+   - Question: "Golden Gate Bridge height"
+   
+   **With expansion OFF:**
+   - Note retrieval quality and input token cost
+   
+   **With expansion ON:**
+   - Compare: Did expansion improve results enough to justify extra tokens?
+
+2. **Complex Query Test:**
+   - Question: "What engineering challenges did they overcome building the Golden Gate Bridge?"
+   
+   **Test both expansion settings:**
+   - See how expansion helps with multi-part, complex questions
+   - Note: Higher input cost but significantly better retrieval?
+
+3. **Ambiguous Query Test:**
+   - Question: "How did they solve the foundation problem?"
+   
+   **Compare expansion settings:**
+   - Does expansion help clarify context for ambiguous questions?
+
+**Expected Learning:**
+- ✅ **Simple queries**: Expansion often unnecessary, pure cost
+- ✅ **Complex queries**: Expansion improves retrieval, worth the cost
+- ✅ **Ambiguous queries**: Expansion helps but may retrieve irrelevant content
+- ✅ **Cost vs. quality**: Measurable trade-offs for different question types
+
+---
+
+### Test 4.5: Model Selection for Cost Efficiency
+**Objective:** Choose the right model for your specific use case
+
+**Educational Goal:** Understand when model capabilities justify same token costs
+
+**Steps:**
+1. **Technical Question Comparison:**
+   - Question: "Explain the suspension cable engineering of the Golden Gate Bridge"
+   
+   **Test all three models:**
+   - **deepseek-chat**: General response quality and token usage
+   - **deepseek-coder**: Technical accuracy and token usage  
+   - **deepseek-reasoner**: Detailed engineering logic and token usage
+   
+   **Compare**: Same token cost, different value for technical questions
+
+2. **General Question Comparison:**
+   - Question: "What is the cultural significance of the Golden Gate Bridge?"
+   
+   **Test all models:**
+   - See which provides best value for general knowledge questions
+
+**Expected Learning:**
+- ✅ **Same pricing, different capabilities** - choose wisely
+- ✅ **Technical questions**: deepseek-coder often worth it
+- ✅ **Complex reasoning**: deepseek-reasoner provides detailed thinking
+- ✅ **General queries**: deepseek-chat efficient for most needs
+
+---
+
+## 🎯 **Cost Optimization Strategy Framework**
+
+### **📋 Before Every Query, Ask:**
+1. **Question Type**: Simple fact, complex topic, or multi-topic synthesis?
+2. **Required Detail**: Brief summary or comprehensive explanation?
+3. **Context Needs**: How much background information is necessary?
+4. **Quality Threshold**: What's "good enough" for this use case?
+
+### **⚡ Optimization Decision Tree:**
+
+**Simple Factual Query:**
+- Documents: 1-3
+- Chunk Size: 300-500  
+- Max Tokens: 100-200
+- Expansion: OFF
+- Model: deepseek-chat
+
+**Complex Single Topic:**
+- Documents: 3-5
+- Chunk Size: 500-800
+- Max Tokens: 300-500
+- Expansion: ON
+- Model: deepseek-chat or deepseek-reasoner
+
+**Multi-Topic Synthesis:**
+- Documents: 5-8
+- Chunk Size: 600-1000
+- Max Tokens: 400-600
+- Expansion: ON
+- Model: deepseek-reasoner
+
+**Technical/Code Questions:**
+- Documents: 3-5
+- Chunk Size: 500-800
+- Max Tokens: 300-500
+- Expansion: ON
+- Model: deepseek-coder
+
+---
+
+## 📊 **TEST SERIES 5: SESSION COST MANAGEMENT**
+
+### Test 5.1: Complete Session Cost Analysis
 **Objective:** Track and optimize total session costs
 
 **Steps:**
@@ -273,7 +495,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ---
 
-### Test 4.2: Cost-Efficient Querying Strategies
+### Test 5.2: Cost-Efficient Querying Strategies
 **Objective:** Learn techniques to reduce per-query costs
 
 **Steps:**
