@@ -515,6 +515,410 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ---
 
+## 🧠 **TEST SERIES 6: INFORMATION SOURCE STRATEGY**
+
+### Test 6.1: Pure LLM vs RAG Cost-Benefit Analysis
+**Objective:** Understand the fundamental cost difference between internal knowledge and external context
+
+**Educational Goal:** Learn when to pay for external context vs. use free internal knowledge
+
+**Steps:**
+1. **General Knowledge Test (Internal LLM Knowledge):**
+   - Clear all documents (no RAG context)
+   - Question: "What is machine learning?"
+   - Note: Input tokens (just your question), output tokens, total cost
+   - Observe: Answer quality from LLM's training data
+
+2. **Same Question with RAG Context:**
+   - Upload machine learning documents
+   - Ask: "What is machine learning?"
+   - Note: Input tokens (question + context chunks), output tokens, total cost
+   - Compare: Much higher input cost, but more specific/current information
+
+3. **Cost-Benefit Analysis:**
+   - Calculate cost difference between approaches
+   - Evaluate: When is the extra cost justified?
+   - Learning: Internal knowledge is "free" but limited
+
+**Expected Learning:**
+- ✅ **Internal knowledge**: Free context but knowledge cutoff limitations
+- ✅ **External RAG**: Higher cost but current, specific information
+- ✅ **Cost structure**: External context dramatically increases input tokens
+- ✅ **Strategic choice**: When to pay for better context vs. use free knowledge
+
+---
+
+### Test 6.2: Information Source Scaling Analysis
+**Objective:** Understand how token costs scale across different information source strategies
+
+**Educational Goal:** Learn to budget for different information complexity needs
+
+**Steps:**
+1. **Minimal Context (Pure LLM):**
+   - Question: "Explain artificial intelligence"
+   - Note: ~5 input tokens, response varies
+   - Cost estimate: $0.0001 (lowest cost, general answer)
+
+2. **Moderate Context (Single Document RAG):**
+   - Upload 1 AI document
+   - Same question
+   - Note: ~1,505 input tokens (question + context)
+   - Cost estimate: $0.0003 (moderate cost, specific answer)
+
+3. **Heavy Context (Multi-Document RAG):**
+   - Upload multiple AI documents
+   - Same question
+   - Note: ~3,005+ input tokens (question + multiple contexts)
+   - Cost estimate: $0.0006+ (high cost, comprehensive answer)
+
+4. **Hypothetical Web Search Context:**
+   - Estimate: Question + web search results = ~5,005 tokens
+   - Cost estimate: $0.001+ (highest cost, most current information)
+
+**Expected Learning:**
+- ✅ **Cost progression**: 1x → 3x → 6x → 10x as context increases
+- ✅ **Quality trade-offs**: More context = better answers but exponential costs
+- ✅ **Budget planning**: Understand cost implications before choosing strategy
+- ✅ **Strategic optimization**: Match information source to question importance
+
+---
+
+### Test 6.3: When External Context is Essential
+**Objective:** Identify scenarios where RAG justifies higher costs
+
+**Educational Goal:** Learn to recognize when internal knowledge isn't sufficient
+
+**Steps:**
+1. **Recent Events Test:**
+   - Question: "What AI developments happened in 2024?"
+   - Test without documents: Note knowledge cutoff limitations
+   - Test with recent documents: See dramatic improvement despite cost
+   - Learning: Some information only exists externally
+
+2. **Proprietary Information Test:**
+   - Question: "What is our company's AI strategy?"
+   - Test without documents: LLM has no internal knowledge
+   - Test with company documents: Only way to get answer
+   - Learning: Specialized knowledge requires external context
+
+3. **Specific Document Analysis:**
+   - Question: "What does this contract say about AI usage?"
+   - Test without document: Impossible to answer
+   - Test with contract document: Detailed, accurate analysis
+   - Learning: Document-specific tasks require RAG
+
+**Expected Learning:**
+- ✅ **Knowledge gaps**: LLMs have training cutoffs and domain limitations
+- ✅ **Necessity vs. enhancement**: When RAG is required vs. optional
+- ✅ **Value justification**: High-value use cases justify higher costs
+- ✅ **Strategic planning**: Budget allocation for essential vs. nice-to-have context
+
+---
+
+## 🏗️ **TEST SERIES 7: INTERNAL VS EXTERNAL KNOWLEDGE ARCHITECTURE**
+
+### Test 7.1: Understanding LLM Internal Knowledge Structure
+**Objective:** Learn how LLM internal knowledge differs fundamentally from RAG systems
+
+**Educational Goal:** Understand why your RAG system is augmentation, not simulation
+
+**Key Concepts to Test:**
+
+#### **LLM Internal Knowledge (Neural Network Weights)**
+- **Structure**: Knowledge encoded in billions of parameters/connections
+- **Access**: Pattern recognition and associative memory
+- **Retrieval**: No explicit search - knowledge emerges from neural patterns
+- **Cost**: "Free" once model is trained - no additional tokens for accessing knowledge
+- **Transparency**: Opaque - can't see what "internal documents" were accessed
+
+#### **Your RAG System (External Augmentation)**
+- **Structure**: Explicit documents chunked and stored in vector database
+- **Access**: Vector similarity search and explicit retrieval
+- **Retrieval**: Measurable, trackable chunk selection process
+- **Cost**: Every retrieved chunk costs input tokens
+- **Transparency**: Complete visibility - see exactly what context influenced answer
+
+**Testing Steps:**
+1. **Internal Knowledge Demonstration:**
+   - Ask: "What is the capital of France?"
+   - Note: LLM "knows" this from training patterns
+   - Cost: Only question + response tokens
+   - No "chunk retrieval" happening internally
+
+2. **External Knowledge Demonstration:**
+   - Upload document about French geography
+   - Ask same question
+   - Note: System retrieves explicit chunks about France
+   - Cost: Question + retrieved chunks + response
+   - Full transparency into what context was used
+
+**Expected Learning:**
+- ✅ **Fundamental difference**: Neural patterns vs. explicit documents
+- ✅ **Cost implications**: Internal knowledge is "free," external costs tokens
+- ✅ **Transparency trade-off**: RAG costs more but provides visibility
+- ✅ **Augmentation not replacement**: RAG adds to, doesn't replace, internal knowledge
+
+---
+
+### Test 7.2: When Internal Knowledge Fails vs RAG Succeeds
+**Objective:** Demonstrate the limitations of internal knowledge and value of external augmentation
+
+**Educational Goal:** Understand why external RAG systems exist despite higher costs
+
+**Steps:**
+1. **Knowledge Cutoff Test:**
+   - Ask about events after LLM's training cutoff
+   - Note: Internal knowledge fails or provides outdated information
+   - Upload recent documents on same topic
+   - See: RAG provides current, accurate information despite cost
+
+2. **Specificity Test:**
+   - Ask: "What is machine learning?" (general internal knowledge)
+   - Note: Generic, broad answer from training data
+   - Upload specialized ML document
+   - Ask: "What is machine learning according to this document?"
+   - See: Specific, contextual answer worth the extra token cost
+
+3. **Proprietary Knowledge Test:**
+   - Ask about your company's specific processes
+   - Note: LLM has no internal knowledge of your proprietary information
+   - Upload company documents
+   - See: Only way to get company-specific answers
+
+**Expected Learning:**
+- ✅ **Internal limitations**: Training cutoffs, generality, no proprietary knowledge
+- ✅ **External value**: Current, specific, proprietary information access
+- ✅ **Cost justification**: When external context provides essential value
+- ✅ **Complementary systems**: Internal + external knowledge working together
+
+---
+
+### Test 7.3: Transparency and Control Advantages
+**Objective:** Understand the educational and practical value of RAG system transparency
+
+**Educational Goal:** Appreciate why explicit context costs more but provides control
+
+**Steps:**
+1. **Internal Knowledge Opacity:**
+   - Ask: "How do you know about machine learning?"
+   - Note: LLM cannot explain its internal knowledge sources
+   - No visibility into what training data influenced the answer
+
+2. **RAG System Transparency:**
+   - Ask same question with RAG enabled
+   - Go to RAG Details tab
+   - See: Exactly which documents and chunks were retrieved
+   - See: Similarity scores, source attribution, retrieval process
+
+3. **Control and Verification:**
+   - Internal knowledge: Cannot verify or control sources
+   - RAG system: Can examine, verify, and control all source material
+   - Cost trade-off: Pay tokens for transparency and control
+
+**Expected Learning:**
+- ✅ **Transparency value**: See exactly what influenced each answer
+- ✅ **Quality control**: Verify and curate information sources
+- ✅ **Educational benefit**: Learn how retrieval affects answers
+- ✅ **Professional applications**: Audit trails and source verification
+
+---
+
+## 🎯 **Information Source Strategy Framework**
+
+### **📋 Decision Matrix: Choosing Your Information Source**
+
+**Pure LLM (Lowest Cost)**
+- ✅ **Best for**: General knowledge, well-established facts, creative tasks
+- ✅ **Cost**: ~$0.0001 per query
+- ❌ **Limitations**: Knowledge cutoffs, no proprietary info, general answers
+
+**Single Document RAG (Moderate Cost)**
+- ✅ **Best for**: Specific document analysis, focused expertise
+- ✅ **Cost**: ~$0.0003 per query
+- ❌ **Limitations**: Limited scope, single perspective
+
+**Multi-Document RAG (Higher Cost)**
+- ✅ **Best for**: Comprehensive analysis, cross-document synthesis
+- ✅ **Cost**: ~$0.0006+ per query
+- ❌ **Limitations**: High cost, potential information overload
+
+**Future Web Search (Highest Cost)**
+- ✅ **Best for**: Current events, broad research, real-time information
+- ✅ **Cost**: ~$0.001+ per query
+- ❌ **Limitations**: Very high cost, information quality varies
+
+### **🎯 Strategic Decision Questions:**
+1. **Information recency**: How current does the information need to be?
+2. **Information specificity**: Generic knowledge or specific documents?
+3. **Budget constraints**: What cost per query is acceptable?
+4. **Transparency needs**: Do you need to verify information sources?
+5. **Query frequency**: High-volume or occasional use?
+
+---
+
+## 🧬 **TEST SERIES 8: UNDERSTANDING LLM INFORMATION BLENDING**
+
+### Test 8.1: How LLMs Actually Combine RAG and Internal Knowledge
+**Objective:** Understand that LLMs blend all information sources, not separate them
+
+**Educational Goal:** Learn why perfect source attribution is impossible
+
+**Key Concept: Neural Networks Don't Work Like Search Engines**
+
+#### **What Actually Happens During RAG Processing:**
+1. **Input Processing**: LLM receives your question + RAG context as one combined input
+2. **Pattern Matching**: Neural network activates patterns from BOTH provided context AND internal training
+3. **Response Generation**: Output emerges from the combination - you can't isolate which tokens came from which source
+
+#### **Testing the Blending Effect:**
+
+**Steps:**
+1. **Pure Internal Knowledge Test:**
+   - Clear all documents
+   - Ask: "What is a suspension bridge?"
+   - Note: Response based purely on training data
+   - Observe: General engineering knowledge, broad examples
+
+2. **RAG Context Addition:**
+   - Upload Golden Gate Bridge document
+   - Ask: "What is a suspension bridge?"
+   - Note: Response now includes specific details from document
+   - Observe: How specific RAG facts blend with general knowledge
+
+3. **Analyze the Blending:**
+   - **Specific facts**: "746 feet tall" - clearly from RAG document
+   - **General concepts**: "suspension bridge principles" - likely internal knowledge
+   - **Comparative statements**: "one of the most famous" - blend of both sources
+   - **Overall structure**: LLM organizing using internal patterns + RAG facts
+
+**Expected Learning:**
+- ✅ **No clean separation**: LLM blends all available information
+- ✅ **Enhanced processing**: RAG context influences how internal knowledge is accessed
+- ✅ **Emergent responses**: Answers emerge from complex neural patterns
+- ✅ **Integrated intelligence**: RAG augments rather than replaces internal knowledge
+
+---
+
+### Test 8.2: Identifying Information Source Patterns
+**Objective:** Learn to recognize probable sources in blended responses
+
+**Educational Goal:** Develop intuition for what likely came from where
+
+**Steps:**
+1. **Specific Fact Analysis:**
+   - Ask: "How tall is the Golden Gate Bridge?"
+   - Response analysis:
+     - **"746 feet"**: High confidence from RAG document
+     - **"above water level"**: Specific detail likely from RAG
+     - **"impressive engineering feat"**: General evaluation from internal knowledge
+
+2. **Complex Question Analysis:**
+   - Ask: "What made the Golden Gate Bridge construction challenging?"
+   - Response analysis:
+     - **Specific challenges mentioned in document**: High RAG confidence
+     - **General engineering principles**: Likely internal knowledge
+     - **Historical context not in document**: Definitely internal knowledge
+     - **Connecting phrases and structure**: Internal language patterns
+
+3. **Cross-Domain Comparison:**
+   - Ask: "How does Golden Gate Bridge compare to other famous bridges?"
+   - Response analysis:
+     - **Golden Gate specifics**: From RAG document
+     - **Other bridge information**: From internal training
+     - **Comparison framework**: Internal analytical patterns
+
+**Expected Learning:**
+- ✅ **Pattern recognition**: Specific facts vs. general knowledge
+- ✅ **Confidence estimation**: Learn to assess probable sources
+- ✅ **Limitation understanding**: Why perfect attribution is impossible
+- ✅ **Blending appreciation**: Value of combined information sources
+
+---
+
+### Test 8.3: The Token Cost Reality of Blended Processing
+**Objective:** Understand cost implications of information blending
+
+**Educational Goal:** Learn why you pay for context even when internal knowledge could suffice
+
+**Steps:**
+1. **Cost Without Context:**
+   - Ask: "What is engineering?"
+   - Note: Low input tokens (just question), internal knowledge response
+   - Cost: ~$0.0001
+
+2. **Cost With Context:**
+   - Upload engineering documents
+   - Ask: "What is engineering?"
+   - Note: High input tokens (question + context), blended response
+   - Cost: ~$0.0003+
+
+3. **Value Analysis:**
+   - Compare responses: Is the RAG-enhanced answer worth 3x the cost?
+   - Consider: Specificity, currency, accuracy improvements
+   - Learning: When context enhancement justifies cost increase
+
+**Expected Learning:**
+- ✅ **Cost reality**: Pay for context even when internal knowledge exists
+- ✅ **Enhancement value**: RAG improves rather than replaces answers
+- ✅ **Strategic choice**: When enhancement justifies cost
+- ✅ **Blending benefit**: Combined sources often better than either alone
+
+---
+
+### Test 8.4: Why RAG Systems Exist Despite Internal Knowledge
+**Objective:** Understand the fundamental value proposition of external context
+
+**Educational Goal:** Learn why we augment rather than rely solely on internal knowledge
+
+**Steps:**
+1. **Limitation Demonstration:**
+   - Ask about recent events (post-training cutoff)
+   - Ask about proprietary information
+   - Ask about specific document analysis
+   - Note: Internal knowledge limitations
+
+2. **RAG Value Demonstration:**
+   - Upload current/proprietary/specific documents
+   - Ask same questions
+   - Note: How RAG fills knowledge gaps
+
+3. **Blending Advantage:**
+   - Observe: RAG facts + internal analytical framework = superior answers
+   - Compare: RAG-only vs. internal-only vs. blended responses
+   - Learning: Synergy between external facts and internal intelligence
+
+**Expected Learning:**
+- ✅ **Complementary systems**: RAG and internal knowledge work together
+- ✅ **Gap filling**: RAG addresses internal knowledge limitations
+- ✅ **Synergistic value**: Combined sources exceed individual capabilities
+- ✅ **Strategic application**: When to invest in external augmentation
+
+---
+
+## 🎯 **Information Blending Understanding Framework**
+
+### **🧠 What You Can and Cannot Know About Source Attribution:**
+
+**✅ What You CAN Identify:**
+- **Specific facts present in RAG documents**: High confidence attribution
+- **Information not in RAG context**: Likely from internal knowledge
+- **Document-specific details**: Probable RAG sourcing
+- **General knowledge patterns**: Likely internal sourcing
+
+**❌ What You CANNOT Definitively Separate:**
+- **Exact token origins**: Neural networks blend everything
+- **Influence attribution**: How internal knowledge shaped context interpretation
+- **Processing pathways**: Which neural patterns were activated
+- **Perfect boundaries**: Where RAG influence ends and internal begins
+
+### **🎓 Educational Value of Understanding Blending:**
+1. **Realistic expectations**: Understand LLM capabilities and limitations
+2. **Cost justification**: Why external context is worth the investment
+3. **Quality assessment**: How to evaluate blended response quality
+4. **Strategic application**: When and how to use RAG effectively
+
+---
+
 ## 🎓 **EDUCATIONAL LEARNING PATHS**
 
 ### **🌟 Beginner Path: Token Mastery (30 minutes)**

@@ -142,7 +142,44 @@ Transform the RAG Chatbot Learning Tool from a functional prototype into a compr
 
 ---
 
-### **5. Database Backup & Restore System**
+### **5. Advanced Source Attribution & Information Blending Analysis**
+**Status**: Cutting-edge educational feature
+**Timeline**: 3-4 weeks
+**Description**: Visualize how LLMs blend RAG and internal knowledge
+
+#### Features:
+- **Enhanced Source Attribution**: Correlate response content with retrieved chunks
+- **Confidence-Based Highlighting**: Visual indicators of probable information sources
+- **Information Blending Analysis**: Show how RAG context influences responses
+- **Source Pattern Recognition**: Identify likely RAG vs. internal knowledge content
+- **Explicit Source Prompting**: Optional system prompts requesting source citations
+- **Comparative Response Analysis**: Side-by-side RAG vs. pure LLM responses
+- **Educational Blending Visualization**: Interactive exploration of information fusion
+
+#### Advanced Attribution Features:
+- **Text Correlation Scoring**: Match response segments to RAG chunks
+- **Confidence Indicators**: Color-coded probability of source attribution
+- **Source Timeline**: Show how different sources contribute to response development
+- **Blending Metrics**: Quantify the integration of internal vs. external knowledge
+- **Attribution Uncertainty**: Honest representation of attribution limitations
+
+#### Educational Components:
+- **Blending Tutorials**: Interactive lessons on how LLMs combine information
+- **Attribution Experiments**: Guided tests showing source influence
+- **Limitation Education**: Clear explanation of why perfect separation is impossible
+- **Neural Network Insights**: Simplified explanations of how information blending works
+
+#### Technical Requirements:
+- Advanced text analysis algorithms
+- Confidence scoring models
+- Interactive visualization components
+- Real-time correlation analysis
+- Educational content management
+- Performance optimization for complex analysis
+
+---
+
+### **6. Database Backup & Restore System**
 **Status**: Missing critical functionality
 **Timeline**: 2-4 weeks
 **Description**: Complete database management capabilities
@@ -162,7 +199,7 @@ Transform the RAG Chatbot Learning Tool from a functional prototype into a compr
 
 ---
 
-### **2. Enhanced File Management**
+### **7. Enhanced File Management**
 **Status**: Basic functionality exists
 **Timeline**: 1-2 weeks
 **Description**: Improved document handling and organization
@@ -183,7 +220,7 @@ Transform the RAG Chatbot Learning Tool from a functional prototype into a compr
 
 ---
 
-### **3. Advanced Query Analytics**
+### **8. Advanced Query Analytics**
 **Status**: Basic retrieval info available
 **Timeline**: 2-3 weeks
 **Description**: Deep insights into query performance and retrieval quality
