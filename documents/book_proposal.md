@@ -184,11 +184,17 @@ We've accidentally created the content for what could be **THE definitive book o
 
 #### **Chapter 17: Docker Deployment for Educators**
 - Why Docker? Consistent environments across platforms
+- **Two deployment strategies**: Clean educational vs. pre-loaded development
+- **Clean educational deployment**: Empty database for learning progression
+- **Pre-loaded development deployment**: Sample documents for quick testing
 - macOS deployment: Teacher setup on MacBooks
 - Linux deployment: Institution server deployment
 - Windows deployment: Student laptop compatibility
 - Docker resource management and performance tuning
 - Networking and port configuration for classroom use
+- **Hands-on deployment guide**: Step-by-step instructions for both scenarios
+- **Troubleshooting guide**: Common issues and solutions
+- **Performance optimization**: Memory, CPU, and storage considerations
 
 #### **Chapter 18: Institutional Deployment Strategies**
 - Multi-user considerations and resource sharing
@@ -215,20 +221,42 @@ We've accidentally created the content for what could be **THE definitive book o
 - Monitoring and analytics for educational use
 
 #### **Chapter 21: Student Distribution and Self-Setup**
-- Simplified setup guides for students
-- Pre-configured Docker images with sample content
-- API key acquisition guidance for students
-- Troubleshooting guides for common student issues
-- Offline capabilities and limited connectivity scenarios
-- Cost-conscious usage patterns for student budgets
+- **Clean deployment for students**: Starting with empty database for maximum learning
+- **One-command setup**: `docker-compose -f docker-compose.clean.yml up -d`
+- **Educational progression**: Watch system learn as documents are added
+- **API key acquisition guidance**: Student-friendly setup instructions
+- **Cross-platform compatibility**: macOS, Linux, Windows deployment guides
+- **Resource requirements**: Minimum system specifications and optimization
+- **Troubleshooting guides**: Common student issues and self-help solutions
+- **Cost-conscious usage patterns**: Teaching students efficient LLM usage
+- **Offline capabilities**: Limited connectivity scenarios and workarounds
+- **Backup and data persistence**: Protecting student work and progress
 
-#### **Chapter 22: Production Deployment Best Practices**
-- Production-ready configurations and security
+#### **Chapter 22: Advanced Docker Deployment Strategies**
+- **Educational vs. Development deployment patterns**: When to use each approach
+- **Volume management strategies**: Named volumes vs. bind mounts for different scenarios
+- **Multi-platform testing methodology**: Automated validation across macOS, Linux, Windows
+- **Container orchestration**: Docker Compose configurations for educational environments
+- **Resource optimization**: Memory, CPU, and storage tuning for classroom use
+- **Health monitoring**: Built-in health checks and monitoring strategies
+- **Automated testing**: Comprehensive deployment validation scripts
+- **Testing vs. Production deployments**: Understanding the critical difference
+- **Quality assurance workflows**: Test isolation and cleanup procedures
+- **Professional deployment practices**: Validation before going live
+- **Cross-platform Git workflows**: Push, pull, test cycle for multi-machine deployment
+- **Backup and recovery**: Data persistence strategies for educational environments
+- **Security considerations**: API key management and container security
+- **Scaling strategies**: From single student to institution-wide deployment
+
+#### **Chapter 23: Production Deployment Best Practices**
+- Production-ready configurations and security hardening
 - SSL/TLS setup and certificate management
 - Reverse proxy configuration (nginx, traefik)
 - Monitoring, logging, and alerting systems
-- Backup and disaster recovery procedures
-- Performance monitoring and optimization
+- Enterprise backup and disaster recovery procedures
+- Performance monitoring and optimization at scale
+- Load balancing and high availability configurations
+- Integration with enterprise authentication systems
 
 ---
 
@@ -245,12 +273,23 @@ We've accidentally created the content for what could be **THE definitive book o
 - "Use the Live Token Testing playground to experiment with tokenization"
 - "Follow the cost tracking display as you implement these strategies"
 - "Export your test results to compare with the case study examples"
+- "Run `./test_docker_deployment.sh` to validate your deployment before going live"
+- "Use the clean educational deployment: `docker-compose -f docker-compose.clean.yml up -d`"
+- "Follow the Git workflow: push changes, pull on target machine, test, deploy"
 
 ### **Hands-On Exercises Throughout**
 - Every concept demonstrated with actual cost calculations
 - Real-time feedback on optimization decisions
 - Immediate validation of learning through practical application
 - Progressive skill building with measurable outcomes
+
+### **Professional Deployment Testing Methodology**
+- **Testing vs. Production distinction**: Understanding why test scripts clean up after themselves
+- **Quality assurance workflows**: Automated validation before student deployment
+- **Cross-platform validation**: Git push → pull → test → deploy cycle
+- **Container lifecycle management**: Start → Test → Stop → Clean → Deploy
+- **Real-world deployment practices**: Professional-grade validation and monitoring
+- **Educational deployment confidence**: Proving everything works before classroom use
 
 ---
 

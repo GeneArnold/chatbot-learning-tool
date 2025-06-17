@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY app.py .
 COPY config.py .
+COPY user_manual.md .
 COPY images/ ./images/
 
 # Create data directory structure

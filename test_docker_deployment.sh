@@ -99,7 +99,22 @@ fi
 
 # Check system resources
 print_status "Checking system resources..."
-MEMORY_GB=$(free -g | awk '/^Mem:/{print $2}')
+if command_exists free; then
+    # Linux
+    MEMORY_GB=$(free -g | awk '/^Mem:/{print $2}')
+elif [ -f /proc/meminfo ]; then
+    # Linux alternative
+    MEMORY_GB=$(($(grep MemTotal /proc/meminfo | awk '{print $2}') / 1024 / 1024))
+else
+    # macOS and others - use system_profiler or approximate
+    if command_exists system_profiler; then
+        MEMORY_GB=$(system_profiler SPHardwareDataType | grep "Memory:" | awk '{print $2}' | sed 's/GB//')
+    else
+        MEMORY_GB=8  # Reasonable default assumption
+        print_status "Unable to detect exact memory - assuming sufficient"
+    fi
+fi
+
 if [ "$MEMORY_GB" -lt 4 ]; then
     print_warning "Less than 4GB RAM available - performance may be affected"
 else
